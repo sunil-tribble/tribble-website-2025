@@ -1645,7 +1645,8 @@
             }
         }
         
-        function closeModal() {
+        // Make closeModal globally accessible for onclick handler
+        window.closeModal = function() {
             const modal = document.getElementById('modal-container');
             modal.classList.remove('active');
             setTimeout(() => {
