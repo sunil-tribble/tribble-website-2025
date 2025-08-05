@@ -1,0 +1,44 @@
+#!/bin/bash
+apt-get update
+apt-get install -y nginx git
+
+# Clone the repository
+cd /var/www
+rm -rf html
+git clone https://github.com/sunil-tribble/website-refresh-2025.git html
+
+# Create nginx configuration
+cat > /etc/nginx/sites-available/default << 'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    
+    root /var/www/html;
+    index index.html;
+    
+    server_name _;
+    
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    
+    # Enable CORS for GLB files
+    location ~* \.(glb|gltf)$ {
+        add_header Access-Control-Allow-Origin *;
+    }
+    
+    # Cache static assets
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|glb|gltf)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+
+# Restart nginx
+systemctl restart nginx
+
+# Create a placeholder for the microchip if it doesn't exist
+if [ ! -f /var/www/html/models/microchip_prototype.glb ]; then
+    echo "Note: microchip_prototype.glb not included due to size" > /var/www/html/models/microchip_note.txt
+fi
