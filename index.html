@@ -1582,6 +1582,77 @@
             }, 2000);
         }
         
+        // Modal content for each scene
+        const modalContent = [
+            {
+                title: "Welcome to the Tribble Agent Factory",
+                text: "Scale expertise across your company with Tribble - your digital teammate that seamlessly integrates with Slack, Salesforce, Zendesk, and your knowledge bases. This is where AI agents are built to amplify your team's capabilities."
+            },
+            {
+                title: "Multi-System Integration Layer",
+                text: "Tribble connects with all your existing tools in real-time. Unlike traditional automation, Tribble creates a unified knowledge layer across Salesforce, Zendesk, Google Drive, and more - making every system work as one."
+            },
+            {
+                title: "Real-Time Processing Engine",
+                text: "Process thousands of requests simultaneously with zero latency. Sales teams save 800 hours per month generating expert-level RFx responses and proposals, while pre-sales achieves 85% productivity increases through instant technical answers."
+            },
+            {
+                title: "Active Learning Templates",
+                text: "Tribble doesn't just respond - it learns. From automating security questionnaires to generating personalized training, Tribble continuously improves by learning from your organizational data and identifying knowledge gaps proactively."
+            },
+            {
+                title: "Knowledge Generation Core",
+                text: "Watch as Tribble automatically generates documentation and fills knowledge gaps. Product teams report 50% efficiency improvements as Tribble identifies missing information and creates comprehensive documentation without manual effort."
+            },
+            {
+                title: "Workflow Automation Pipeline",
+                text: "Deploy Tribble across Sales, Pre-Sales, Enablement, and Product workflows. Each agent is configured to your specific needs, delivering personalized responses and taking proactive actions based on your business rules."
+            },
+            {
+                title: "Tribblytics Intelligence Gateway",
+                text: "Gain real-time insights into how your digital teammate is performing. Tribblytics provides comprehensive analytics on agent interactions, knowledge utilization, and productivity gains across your organization."
+            },
+            {
+                title: "Agent Configuration Builder",
+                text: "Build custom agents tailored to your unique workflows. Whether it's RFx automation saving 800 hours monthly or enablement programs saving 1,275 hours, configure Tribble to match your exact business needs."
+            },
+            {
+                title: "Execution Runtime Environment",
+                text: "Tribble operates 24/7 as your always-on digital teammate. With active learning and real-time processing, it handles complex tasks autonomously while seamlessly integrating into your team's daily workflow."
+            },
+            {
+                title: "Your Tribble Command Center",
+                text: "Welcome to the future of work. From here, deploy Tribble across your organization, monitor performance through Tribblytics, and watch as your team's expertise scales exponentially. Your digital teammate is ready to transform how work gets done."
+            }
+        ];
+        
+        // Modal functions
+        let modalShown = new Array(scenes.length).fill(false);
+        
+        function showModal(sceneIndex) {
+            console.log('Showing modal for scene:', sceneIndex);
+            if (modalContent[sceneIndex] && !modalShown[sceneIndex]) {
+                const modal = document.getElementById('modal-container');
+                document.getElementById('modal-title').textContent = modalContent[sceneIndex].title;
+                document.getElementById('modal-text').textContent = modalContent[sceneIndex].text;
+                
+                // Show modal immediately with proper display
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    modalShown[sceneIndex] = true;
+                }, 10);
+            }
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('modal-container');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+        
         init();
     </script>
     <!-- Modal System -->
@@ -1663,78 +1734,6 @@
         }
     </style>
 
-    <script>
-        // Modal content for each scene
-        const modalContent = [
-            {
-                title: "Welcome to the Tribble Agent Factory",
-                text: "Scale expertise across your company with Tribble - your digital teammate that seamlessly integrates with Slack, Salesforce, Zendesk, and your knowledge bases. This is where AI agents are built to amplify your team's capabilities."
-            },
-            {
-                title: "Multi-System Integration Layer",
-                text: "Tribble connects with all your existing tools in real-time. Unlike traditional automation, Tribble creates a unified knowledge layer across Salesforce, Zendesk, Google Drive, and more - making every system work as one."
-            },
-            {
-                title: "Real-Time Processing Engine",
-                text: "Process thousands of requests simultaneously with zero latency. Sales teams save 800 hours per month generating expert-level RFx responses and proposals, while pre-sales achieves 85% productivity increases through instant technical answers."
-            },
-            {
-                title: "Active Learning Templates",
-                text: "Tribble doesn't just respond - it learns. From automating security questionnaires to generating personalized training, Tribble continuously improves by learning from your organizational data and identifying knowledge gaps proactively."
-            },
-            {
-                title: "Knowledge Generation Core",
-                text: "Watch as Tribble automatically generates documentation and fills knowledge gaps. Product teams report 50% efficiency improvements as Tribble identifies missing information and creates comprehensive documentation without manual effort."
-            },
-            {
-                title: "Workflow Automation Pipeline",
-                text: "Deploy Tribble across Sales, Pre-Sales, Enablement, and Product workflows. Each agent is configured to your specific needs, delivering personalized responses and taking proactive actions based on your business rules."
-            },
-            {
-                title: "Tribblytics Intelligence Gateway",
-                text: "Gain real-time insights into how your digital teammate is performing. Tribblytics provides comprehensive analytics on agent interactions, knowledge utilization, and productivity gains across your organization."
-            },
-            {
-                title: "Agent Configuration Builder",
-                text: "Build custom agents tailored to your unique workflows. Whether it's RFx automation saving 800 hours monthly or enablement programs saving 1,275 hours, configure Tribble to match your exact business needs."
-            },
-            {
-                title: "Execution Runtime Environment",
-                text: "Tribble operates 24/7 as your always-on digital teammate. With active learning and real-time processing, it handles complex tasks autonomously while seamlessly integrating into your team's daily workflow."
-            },
-            {
-                title: "Your Tribble Command Center",
-                text: "Welcome to the future of work. From here, deploy Tribble across your organization, monitor performance through Tribblytics, and watch as your team's expertise scales exponentially. Your digital teammate is ready to transform how work gets done."
-            }
-        ];
-        
-        // Modal functions
-        let modalShown = new Array(scenes.length).fill(false);
-        
-        function showModal(sceneIndex) {
-            console.log('Showing modal for scene:', sceneIndex);
-            if (modalContent[sceneIndex] && !modalShown[sceneIndex]) {
-                const modal = document.getElementById('modal-container');
-                document.getElementById('modal-title').textContent = modalContent[sceneIndex].title;
-                document.getElementById('modal-text').textContent = modalContent[sceneIndex].text;
-                
-                // Show modal immediately with proper display
-                modal.style.display = 'flex';
-                setTimeout(() => {
-                    modal.classList.add('active');
-                    modalShown[sceneIndex] = true;
-                }, 10);
-            }
-        }
-        
-        function closeModal() {
-            const modal = document.getElementById('modal-container');
-            modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        }
-    </script>
 
 </body>
 </html>
