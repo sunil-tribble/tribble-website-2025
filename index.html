@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tribble - The Agent Factory | Scale Expertise Across Your Company</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+            height: 1600vh;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        .hud-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* HUD Frame Elements */
+        .hud-frame {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            opacity: 0.8;
+        }
+        
+        .hud-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #3b82f6;
+        }
+        
+        .hud-corner.top-left {
+            top: 40px;
+            left: 40px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .hud-corner.top-right {
+            top: 40px;
+            right: 40px;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .hud-corner.bottom-left {
+            bottom: 40px;
+            left: 40px;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .hud-corner.bottom-right {
+            bottom: 40px;
+            right: 40px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* Scanning lines */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            opacity: 0;
+        }
+        
+        /* Data readouts */
+        .data-readout {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #3b82f6;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #1e40af;
+            opacity: 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .data-label {
+            color: #64748b;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .data-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-top: 2px;
+        }
+        
+        /* Targeting reticle */
+        .targeting-reticle {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+        }
+        
+        .reticle-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #60a5fa;
+            border-radius: 50%;
+        }
+        
+        .reticle-cross {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .reticle-line {
+            position: absolute;
+            background: #60a5fa;
+        }
+        
+        .reticle-line.horizontal {
+            width: 120px;
+            height: 1px;
+            left: -10px;
+        }
+        
+        .reticle-line.vertical {
+            width: 1px;
+            height: 120px;
+            top: -10px;
+        }
+        
+        /* Tech grid overlay */
+        .tech-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.5;
+        }
+        
+        /* Analysis info panel */
+        .analysis-panel {
+            position: absolute;
+            top: 50%;
+            right: 60px;
+            transform: translateY(-50%);
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #3b82f6;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+        }
+        
+        .analysis-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        
+        .analysis-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .analysis-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* Hero content overlay */
+        .hero-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .hero-content.hidden {
+            opacity: 0;
+        }
+        
+        .hero-logo {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #1e40af;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+        }
+        
+        .hero-tagline {
+            font-size: 1.5rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+        
+        .hero-cta {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            margin: 0 0.5rem;
+        }
+        
+        .hero-cta:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .hero-cta.secondary {
+            background: transparent;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .hero-cta.secondary:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* Platform features */
+        .features-strip {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .features-strip.visible {
+            opacity: 1;
+        }
+        
+        .feature-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.3rem;
+        }
+        
+        .feature-desc {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        /* Scroll prompt */
+        .scroll-prompt {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        
+        .scroll-prompt.hidden {
+            opacity: 0;
+        }
+        
+        .scroll-text {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .scroll-arrow {
+            width: 30px;
+            height: 30px;
+            border-right: 2px solid #3b82f6;
+            border-bottom: 2px solid #3b82f6;
+            transform: rotate(45deg);
+            margin: 0 auto;
+            animation: scrollBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes scrollBounce {
+            0%, 100% { transform: rotate(45deg) translateY(0); }
+            50% { transform: rotate(45deg) translateY(5px); }
+        }
+        
+        /* Scene title */
+        .scene-info {
+            position: absolute;
+            top: 60px;
+            left: 60px;
+            opacity: 0;
+        }
+        
+        .scene-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e40af;
+            letter-spacing: -0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .scene-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* Floating data points */
+        .data-point {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #60a5fa;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        .data-point::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #60a5fa;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+        
+        /* Additional HUD elements */
+        
+        .velocity-display {
+            position: absolute;
+            left: 60px;
+            bottom: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #3b82f6;
+            padding: 10px 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            opacity: 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .velocity-label {
+            color: #64748b;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .velocity-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-top: 3px;
+        }
+        
+        .connection-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        .connection-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            transform-origin: left center;
+        }
+        
+        .tracking-brackets {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .bracket {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #60a5fa;
+        }
+        
+        .bracket.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .bracket.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+        .bracket.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+        .bracket.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+        
+        
+        /* Radar sweep */
+        .radar-container {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            width: 150px;
+            height: 150px;
+            opacity: 0;
+        }
+        
+        .radar-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+        }
+        
+        .radar-sweep {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(from 0deg, transparent, rgba(96, 165, 250, 0.6), transparent 30deg);
+            border-radius: 50%;
+            animation: radarSweep 3s linear infinite;
+        }
+        
+        @keyframes radarSweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .radar-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #60a5fa;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #60a5fa;
+            animation: radarPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes radarPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        
+        /* Waveform analyzer */
+        .waveform {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 60px;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .wave-bar {
+            flex: 1;
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            height: 20%;
+            animation: waveform 1s ease-in-out infinite;
+        }
+        
+        @keyframes waveform {
+            0%, 100% { height: 20%; }
+            50% { height: var(--wave-height, 80%); }
+        }
+        
+        /* Crosshair overlay */
+        .crosshair-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .crosshair-line {
+            position: absolute;
+            background: rgba(96, 165, 250, 0.5);
+        }
+        
+        .crosshair-h1 { top: 30%; left: 0; width: 30%; height: 1px; }
+        .crosshair-h2 { top: 30%; right: 0; width: 30%; height: 1px; }
+        .crosshair-h3 { bottom: 30%; left: 0; width: 30%; height: 1px; }
+        .crosshair-h4 { bottom: 30%; right: 0; width: 30%; height: 1px; }
+        .crosshair-v1 { left: 30%; top: 0; height: 30%; width: 1px; }
+        .crosshair-v2 { left: 30%; bottom: 0; height: 30%; width: 1px; }
+        .crosshair-v3 { right: 30%; top: 0; height: 30%; width: 1px; }
+        .crosshair-v4 { right: 30%; bottom: 0; height: 30%; width: 1px; }
+        
+        .crosshair-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border: 2px solid #60a5fa;
+            border-radius: 50%;
+        }
+        
+        /* Particle field */
+        .particle-field {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #60a5fa;
+            border-radius: 50%;
+            animation: particleDrift 15s linear infinite;
+        }
+        
+        @keyframes particleDrift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(var(--drift-x), var(--drift-y)); }
+        }
+    </style>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-text">INITIALIZING AGENT FACTORY</div>
+    </div>
+    
+    <!-- Hero content -->
+    <div class="hero-content" id="hero-content">
+        <h1 class="hero-logo">TRIBBLE</h1>
+        <p class="hero-tagline">The Agent Factory for Building Intelligent Workflows</p>
+        <div>
+            <a href="#" class="hero-cta">Start Building Agents</a>
+            <a href="#" class="hero-cta secondary">View Documentation</a>
+        </div>
+    </div>
+    
+    <!-- Features strip -->
+    <div class="features-strip" id="features-strip">
+        <div class="feature-item">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">AI Agents</div>
+            <div class="feature-desc">Deploy autonomous agents for any task</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">Workflows</div>
+            <div class="feature-desc">Chain agents into powerful workflows</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🚀</div>
+            <div class="feature-title">Go-to-Market</div>
+            <div class="feature-desc">Launch and scale your AI solutions</div>
+        </div>
+    </div>
+    
+    <!-- Scroll prompt -->
+    <div class="scroll-prompt" id="scroll-prompt">
+        <div class="scroll-text">Explore the Factory</div>
+        <div class="scroll-arrow"></div>
+    </div>
+    
+    <div class="hud-overlay">
+        <div class="tech-grid"></div>
+        
+        <!-- HUD Corners -->
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+        
+        <!-- Scanning lines -->
+        <div class="scan-line" id="scan1" style="top: 20%"></div>
+        <div class="scan-line" id="scan2" style="top: 50%"></div>
+        <div class="scan-line" id="scan3" style="top: 80%"></div>
+        
+        <!-- Scene info -->
+        <div class="scene-info" id="scene-info">
+            <h1 class="scene-title" id="scene-title">FACTORY OVERVIEW</h1>
+            <p class="scene-subtitle" id="scene-subtitle">Complete System Analysis</p>
+        </div>
+        
+        <!-- Data readouts -->
+        <div class="data-readout" id="readout1" style="top: 150px; left: 60px;">
+            <div class="data-label">ACTIVE AGENTS</div>
+            <div class="data-value" id="cores-value">0</div>
+        </div>
+        
+        <div class="data-readout" id="readout2" style="top: 220px; left: 60px;">
+            <div class="data-label">WORKFLOW EFFICIENCY</div>
+            <div class="data-value" id="density-value">0.00%</div>
+        </div>
+        
+        <div class="data-readout" id="readout3" style="bottom: 150px; left: 60px;">
+            <div class="data-label">DEPLOYMENTS/SEC</div>
+            <div class="data-value" id="production-value">0</div>
+        </div>
+        
+        <!-- Targeting reticle -->
+        <div class="targeting-reticle" id="reticle">
+            <div class="reticle-circle"></div>
+            <div class="reticle-cross">
+                <div class="reticle-line horizontal"></div>
+                <div class="reticle-line vertical"></div>
+            </div>
+        </div>
+        
+        <!-- Analysis panel -->
+        <div class="analysis-panel" id="analysis-panel">
+            <div class="analysis-title">SYSTEM ANALYSIS</div>
+            <div class="analysis-item">
+                <div class="data-label">AGENT RELIABILITY</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="integrity-progress"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">API RESPONSE TIME</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="efficiency-progress"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">MODEL ACCURACY</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sync-progress"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">SYSTEM UPTIME</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="thermal-progress"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating data points -->
+        <div class="data-point" id="point1"></div>
+        <div class="data-point" id="point2"></div>
+        <div class="data-point" id="point3"></div>
+        <div class="data-point" id="point4"></div>
+        <div class="data-point" id="point5"></div>
+        
+        <!-- Additional HUD elements -->
+        
+        <div class="velocity-display" id="velocity-display">
+            <div class="velocity-label">INTEGRATION SPEED</div>
+            <div class="velocity-value" id="velocity-value">0.00</div>
+        </div>
+        
+        <div class="connection-lines" id="connection-lines">
+            <div class="connection-line" id="line1" style="top: 25%; width: 200px; left: 10%;"></div>
+            <div class="connection-line" id="line2" style="top: 50%; width: 150px; right: 15%; transform: rotate(-30deg);"></div>
+            <div class="connection-line" id="line3" style="bottom: 30%; width: 180px; left: 20%; transform: rotate(20deg);"></div>
+        </div>
+        
+        <div class="tracking-brackets" id="tracking-brackets" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 150px;">
+            <div class="bracket tl"></div>
+            <div class="bracket tr"></div>
+            <div class="bracket bl"></div>
+            <div class="bracket br"></div>
+        </div>
+        
+        <!-- Matrix rain effect -->
+        
+        <!-- Radar display -->
+        <div class="radar-container" id="radar">
+            <div class="radar-circle"></div>
+            <div class="radar-circle" style="transform: scale(0.66);"></div>
+            <div class="radar-circle" style="transform: scale(0.33);"></div>
+            <div class="radar-sweep"></div>
+            <div class="radar-dot" style="top: 30%; left: 60%;"></div>
+            <div class="radar-dot" style="top: 70%; left: 40%;"></div>
+            <div class="radar-dot" style="top: 50%; left: 20%;"></div>
+        </div>
+        
+        
+        <!-- Waveform analyzer -->
+        <div class="waveform" id="waveform"></div>
+        
+        <!-- Crosshair overlay -->
+        <div class="crosshair-overlay" id="crosshair">
+            <div class="crosshair-line crosshair-h1"></div>
+            <div class="crosshair-line crosshair-h2"></div>
+            <div class="crosshair-line crosshair-h3"></div>
+            <div class="crosshair-line crosshair-h4"></div>
+            <div class="crosshair-line crosshair-v1"></div>
+            <div class="crosshair-line crosshair-v2"></div>
+            <div class="crosshair-line crosshair-v3"></div>
+            <div class="crosshair-line crosshair-v4"></div>
+            <div class="crosshair-center"></div>
+        </div>
+        
+        <!-- Particle field -->
+        <div class="particle-field" id="particle-field"></div>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf8fafc);
+        
+        // Camera
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 4000);
+        camera.position.set(0, 1000, 2000);
+        
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true, 
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0x3b82f6, 0.8);
+        directionalLight.position.set(100, 200, 100);
+        scene.add(directionalLight);
+        
+        const rimLight = new THREE.DirectionalLight(0x60a5fa, 0.4);
+        rimLight.position.set(-100, 100, -100);
+        scene.add(rimLight);
+        
+        // Model loader
+        const gltfLoader = new GLTFLoader();
+        
+        // Component storage
+        let mainFactory = null;
+        
+        // Enhanced wireframe conversion with adjustable opacity
+        function convertToWireframe(object, color = 0x1e40af, lineOpacity = 1.0) {
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    const wireframeGeometry = new THREE.WireframeGeometry(child.geometry);
+                    const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                        color: color,
+                        linewidth: 2,
+                        transparent: true,
+                        opacity: lineOpacity
+                    });
+                    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                    child.add(wireframe);
+                    child.userData.wireframe = wireframe;
+                    child.userData.wireframeMaterial = wireframeMaterial;
+                    
+                    child.material = new THREE.MeshBasicMaterial({ 
+                        color: 0xf0f9ff,
+                        transparent: true,
+                        opacity: 0.02,
+                        side: THREE.DoubleSide
+                    });
+                }
+            });
+        }
+        
+        // Scene configurations - journey from far to inside
+        const scenes = [
+            { 
+                name: 'TRIBBLE AGENT FACTORY',
+                subtitle: 'Scale Expertise Across Your Company - 2000m',
+                camera: { x: 0, y: 1000, z: 2000 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0, z: 0 },
+                hudElements: ['velocity-display', 'tracking-brackets']
+            },
+            { 
+                name: 'INTEGRATION LAYER',
+                subtitle: 'Unified Knowledge Across All Systems - 1000m',
+                camera: { x: 500, y: 600, z: 1000 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0.2, z: 0 },
+                hudElements: ['velocity-display', 'readout1', 'connection-lines', 'radar']
+            },
+            { 
+                name: 'REAL-TIME PROCESSING',
+                subtitle: 'Zero-Latency Response Engine - 500m',
+                camera: { x: -300, y: 400, z: 500 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: -0.3, z: 0 },
+                hudElements: ['readout1', 'readout2', 'compass', 'reticle', 'particle-field']
+            },
+            { 
+                name: 'ACTIVE LEARNING',
+                subtitle: 'Continuous Knowledge Improvement - 250m',
+                camera: { x: 200, y: 250, z: 300 },
+                target: { x: 0, y: 30, z: 0 },
+                rotation: { x: 0, y: 0.5, z: 0 },
+                hudElements: ['analysis-panel', 'reticle', 'point1', 'point2', 'point3', 'crosshair']
+            },
+            { 
+                name: 'KNOWLEDGE GENERATION',
+                subtitle: 'Auto-Documentation Engine - Orbital View',
+                camera: { x: 250, y: 200, z: 250 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 1.2, z: 0 },
+                hudElements: ['analysis-panel', 'reticle', 'readout2', 'tracking-brackets']
+            },
+            { 
+                name: 'WORKFLOW AUTOMATION',
+                subtitle: 'Sales, Pre-Sales & Product Teams - Side View',
+                camera: { x: -300, y: 150, z: 0 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 1.8, z: 0 },
+                hudElements: ['readout3', 'point1', 'point2', 'connection-lines', 'waveform']
+            },
+            { 
+                name: 'TRIBBLYTICS',
+                subtitle: 'Real-Time Analytics & Insights - Perspective View',
+                camera: { x: 200, y: 250, z: -200 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0.1, y: 2.4, z: 0 },
+                hudElements: ['readout1', 'readout2', 'reticle', 'point3', 'point4']
+            },
+            { 
+                name: 'AGENT CONFIGURATION',
+                subtitle: 'Custom Workflow Builder - Diagonal View',
+                camera: { x: -250, y: 200, z: 250 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 3.0, z: 0 },
+                hudElements: ['analysis-panel', 'readout3', 'velocity-display']
+            },
+            { 
+                name: '24/7 DIGITAL TEAMMATE',
+                subtitle: 'Always-On Execution - Top View',
+                camera: { x: 0, y: 350, z: 150 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 3.8, z: 0 },
+                hudElements: ['readout1', 'readout2', 'reticle', 'tracking-brackets']
+            },
+            { 
+                name: 'TRIBBLE COMMAND CENTER',
+                subtitle: 'Transform How Work Gets Done - Complete View',
+                camera: { x: 300, y: 300, z: 300 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 4.5, z: 0 },
+                hudElements: ['analysis-panel', 'readout1', 'readout2', 'readout3', 'connection-lines']
+            }
+        ];
+        
+        let currentScene = 0;
+        
+        // Load main factory model
+        async function loadModels() {
+            try {
+                const gltf = await gltfLoader.loadAsync('./models/mega_factory.glb');
+                mainFactory = gltf.scene;
+                mainFactory.scale.set(2, 2, 2);
+                // Start with lower opacity for better text readability
+                convertToWireframe(mainFactory, 0x1e40af, 0.3);
+                scene.add(mainFactory);
+                
+                // Add microchip grid in the center
+                try {
+                    const chipGltf = await gltfLoader.loadAsync('./models/microchip_prototype.glb');
+                    
+                    // Create a 3D grid of chips
+                    const chipGrid = new THREE.Group();
+                    const connectionGroup = new THREE.Group();
+                    const rows = 3;
+                    const cols = 3;
+                    const layers = 3;
+                    const spacing = 40;
+                    
+                    const chipPositions = [];
+                    
+                    for (let layer = 0; layer < layers; layer++) {
+                        for (let row = 0; row < rows; row++) {
+                            for (let col = 0; col < cols; col++) {
+                                const chip = chipGltf.scene.clone();
+                                chip.scale.set(5, 5, 5);
+                                
+                                // Convert to wireframe with cyan color
+                                convertToWireframe(chip, 0x00ffff, 0.8);
+                                
+                                // Position in 3D grid with more spacing
+                                const x = (col - cols / 2 + 0.5) * spacing;
+                                const z = (row - rows / 2 + 0.5) * spacing;
+                                const y = 40 + (layer * spacing);
+                                
+                                chip.position.set(x, y, z);
+                                chipPositions.push({x, y, z});
+                                
+                                // Add slight rotation for visual interest
+                                chip.rotation.y = Math.PI / 4;
+                                
+                                chipGrid.add(chip);
+                            }
+                        }
+                    }
+                    
+                    // Create neural network connections
+                    const connectionMaterial = new THREE.LineBasicMaterial({
+                        color: 0x00ffff,
+                        transparent: true,
+                        opacity: 0.3,
+                        linewidth: 1
+                    });
+                    
+                    // Connect adjacent chips
+                    for (let i = 0; i < chipPositions.length; i++) {
+                        for (let j = i + 1; j < chipPositions.length; j++) {
+                            const dist = Math.sqrt(
+                                Math.pow(chipPositions[i].x - chipPositions[j].x, 2) +
+                                Math.pow(chipPositions[i].y - chipPositions[j].y, 2) +
+                                Math.pow(chipPositions[i].z - chipPositions[j].z, 2)
+                            );
+                            
+                            // Connect nearby chips
+                            if (dist < spacing * 1.5) {
+                                const geometry = new THREE.BufferGeometry().setFromPoints([
+                                    new THREE.Vector3(chipPositions[i].x, chipPositions[i].y, chipPositions[i].z),
+                                    new THREE.Vector3(chipPositions[j].x, chipPositions[j].y, chipPositions[j].z)
+                                ]);
+                                const line = new THREE.Line(geometry, connectionMaterial);
+                                connectionGroup.add(line);
+                            }
+                        }
+                    }
+                    
+                    chipGrid.add(connectionGroup);
+                    
+                    // Add rotation animation to the entire chip grid
+                    chipGrid.userData.rotationSpeed = 0.001;
+                    chipGrid.userData.connectionGroup = connectionGroup;
+                    mainFactory.add(chipGrid);
+                    mainFactory.userData.chipGrid = chipGrid;
+                    
+                } catch (e) {
+                    console.log('Microchip grid not added:', e);
+                }
+                
+            } catch (error) {
+                console.log('Creating fallback factory');
+                
+                // Create complex fallback factory
+                const factoryGroup = new THREE.Group();
+                
+                // Main building
+                const mainGeometry = new THREE.BoxGeometry(100, 50, 120);
+                const mainMesh = new THREE.Mesh(mainGeometry);
+                // Start with lower opacity for better text readability
+                convertToWireframe(mainMesh, 0x1e40af, 0.3);
+                factoryGroup.add(mainMesh);
+                
+                // Central dome
+                const domeGeometry = new THREE.SphereGeometry(30, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+                const domeMesh = new THREE.Mesh(domeGeometry);
+                convertToWireframe(domeMesh, 0x00bfff, 0.3);
+                domeMesh.position.y = 25;
+                factoryGroup.add(domeMesh);
+                
+                // Towers
+                for (let i = 0; i < 4; i++) {
+                    const towerGeometry = new THREE.CylinderGeometry(8, 10, 80, 8);
+                    const towerMesh = new THREE.Mesh(towerGeometry);
+                    convertToWireframe(towerMesh, 0x3b82f6, 0.3);
+                    const angle = (i / 4) * Math.PI * 2;
+                    towerMesh.position.x = Math.cos(angle) * 60;
+                    towerMesh.position.z = Math.sin(angle) * 60;
+                    towerMesh.position.y = 40;
+                    factoryGroup.add(towerMesh);
+                }
+                
+                // Production wings
+                for (let side = -1; side <= 1; side += 2) {
+                    const wingGeometry = new THREE.BoxGeometry(50, 30, 80);
+                    const wingMesh = new THREE.Mesh(wingGeometry);
+                    convertToWireframe(wingMesh, 0x1e40af, 0.3);
+                    wingMesh.position.x = side * 75;
+                    wingMesh.position.y = 15;
+                    factoryGroup.add(wingMesh);
+                    
+                    // Connectors
+                    const connectorGeometry = new THREE.BoxGeometry(25, 15, 20);
+                    const connectorMesh = new THREE.Mesh(connectorGeometry);
+                    convertToWireframe(connectorMesh, 0x60a5fa, 0.3);
+                    connectorMesh.position.x = side * 50;
+                    connectorMesh.position.y = 7.5;
+                    factoryGroup.add(connectorMesh);
+                }
+                
+                // Details
+                for (let i = 0; i < 8; i++) {
+                    const detailGeometry = new THREE.BoxGeometry(10, 25, 10);
+                    const detailMesh = new THREE.Mesh(detailGeometry);
+                    convertToWireframe(detailMesh, 0x93c5fd, 0.3);
+                    const angle = (i / 8) * Math.PI * 2;
+                    detailMesh.position.x = Math.cos(angle) * 40;
+                    detailMesh.position.z = Math.sin(angle) * 40;
+                    detailMesh.position.y = 12.5;
+                    factoryGroup.add(detailMesh);
+                }
+                
+                mainFactory = factoryGroup;
+                scene.add(mainFactory);
+            }
+        }
+        
+        // Initialize HUD animations
+        function initHUD() {
+            // Animate corners
+            anime({
+                targets: '.hud-corner',
+                opacity: [0, 0.8],
+                scale: [0.8, 1],
+                duration: 1000,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuad'
+            });
+            
+            // Scanning lines animation
+            anime({
+                targets: '.scan-line',
+                opacity: [0, 0.6, 0],
+                translateY: [-50, 50],
+                duration: 3000,
+                delay: anime.stagger(500),
+                loop: true,
+                easing: 'linear'
+            });
+            
+            // Scene info fade in
+            anime({
+                targets: '#scene-info',
+                opacity: [0, 1],
+                translateX: [-20, 0],
+                duration: 800,
+                delay: 500,
+                easing: 'easeOutQuad'
+            });
+            
+            // Animated counters
+            animateCounter('cores-value', 0, 127, 2000);
+            animateCounter('density-value', 0, 98.7, 2500, true, '%');
+            animateCounter('production-value', 0, 47, 3000);
+            
+            // Reticle animation
+            anime({
+                targets: '#reticle',
+                rotate: 360,
+                duration: 8000,
+                loop: true,
+                easing: 'linear'
+            });
+            
+            // Data points floating
+            anime({
+                targets: '.data-point',
+                translateY: [0, -20, 0],
+                opacity: [0, 1, 0],
+                duration: 3000,
+                delay: anime.stagger(400),
+                loop: true,
+                easing: 'easeInOutSine'
+            });
+            
+            // Connection lines animation
+            anime({
+                targets: '.connection-line',
+                opacity: [0, 0.6, 0],
+                scaleX: [0, 1, 0],
+                duration: 2000,
+                delay: anime.stagger(300),
+                loop: true,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Tracking brackets pulse
+            anime({
+                targets: '.tracking-brackets',
+                scale: [1, 1.1, 1],
+                opacity: [0.6, 1, 0.6],
+                duration: 2000,
+                loop: true,
+                easing: 'easeInOutSine'
+            });
+            
+            
+            // Initialize waveform
+            createWaveform();
+            
+            // Initialize particle field
+            createParticleField();
+            
+            // Crosshair animation
+            anime({
+                targets: '.crosshair-line',
+                opacity: [0, 0.8, 0],
+                duration: 2000,
+                delay: anime.stagger(100),
+                loop: true,
+                easing: 'easeInOutQuad'
+            });
+            
+        }
+        
+        
+        // Create waveform analyzer
+        function createWaveform() {
+            const waveformContainer = document.getElementById('waveform');
+            
+            for (let i = 0; i < 40; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                bar.style.setProperty('--wave-height', `${20 + Math.random() * 80}%`);
+                bar.style.animationDelay = `${i * 0.05}s`;
+                waveformContainer.appendChild(bar);
+            }
+        }
+        
+        // Create particle field
+        function createParticleField() {
+            const particleContainer = document.getElementById('particle-field');
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 200}px`);
+                particle.style.setProperty('--drift-y', `${(Math.random() - 0.5) * 200}px`);
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                particle.style.opacity = Math.random() * 0.8;
+                particleContainer.appendChild(particle);
+            }
+        }
+        
+        // Animate number counters
+        function animateCounter(id, start, end, duration, isFloat = false, suffix = '') {
+            const element = document.getElementById(id);
+            const obj = { value: start };
+            
+            anime({
+                targets: obj,
+                value: end,
+                duration: duration,
+                easing: 'easeOutQuad',
+                update: function() {
+                    if (isFloat) {
+                        element.textContent = obj.value.toFixed(2) + suffix;
+                    } else {
+                        element.textContent = Math.floor(obj.value) + suffix;
+                    }
+                }
+            });
+        }
+        
+        // Update HUD for scene changes
+        function updateHUD(sceneIndex) {
+            const scene = scenes[sceneIndex];
+            
+            // Update title
+            document.getElementById('scene-title').textContent = scene.name;
+            document.getElementById('scene-subtitle').textContent = scene.subtitle;
+            
+            // Hide all HUD elements
+            const allElements = ['readout1', 'readout2', 'readout3', 'analysis-panel', 'reticle', 
+                               'point1', 'point2', 'point3', 'point4', 'point5',
+                               'velocity-display', 'connection-lines', 'tracking-brackets',
+                               'radar', 'waveform', 'crosshair', 'particle-field'];
+            allElements.forEach(id => {
+                anime({
+                    targets: `#${id}`,
+                    opacity: 0,
+                    duration: 300
+                });
+            });
+            
+            // Show scene-specific elements
+            scene.hudElements.forEach((id, index) => {
+                anime({
+                    targets: `#${id}`,
+                    opacity: 1,
+                    duration: 500,
+                    delay: index * 100,
+                    easing: 'easeOutQuad'
+                });
+            });
+            
+            // Update progress bars
+            if (scene.hudElements.includes('analysis-panel')) {
+                anime({
+                    targets: '#integrity-progress',
+                    width: '85%',
+                    duration: 1000,
+                    delay: 300,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#efficiency-progress',
+                    width: '92%',
+                    duration: 1000,
+                    delay: 400,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#sync-progress',
+                    width: '78%',
+                    duration: 1000,
+                    delay: 500,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#thermal-progress',
+                    width: '94%',
+                    duration: 1000,
+                    delay: 600,
+                    easing: 'easeOutQuad'
+                });
+            }
+            
+            // Position reticle at focus points
+            if (scene.hudElements.includes('reticle')) {
+                const reticle = document.getElementById('reticle');
+                const positions = [
+                    { x: '50%', y: '40%' },
+                    { x: '60%', y: '45%' },
+                    { x: '40%', y: '55%' },
+                    { x: '55%', y: '50%' },
+                    { x: '45%', y: '35%' }
+                ];
+                const pos = positions[sceneIndex % positions.length];
+                
+                anime({
+                    targets: reticle,
+                    left: pos.x,
+                    top: pos.y,
+                    duration: 800,
+                    easing: 'easeInOutQuad'
+                });
+            }
+            
+            
+            // Update velocity
+            if (scene.hudElements.includes('velocity-display')) {
+                const velocity = 2.5 + (sceneIndex * 0.3);
+                animateCounter('velocity-value', velocity - 0.5, velocity, 800, true);
+            }
+            
+        }
+        
+        // Smooth scroll system
+        let targetScrollY = 0;
+        let currentScrollY = 0;
+        let scrollVelocity = 0;
+        
+        function handleScroll() {
+            targetScrollY = window.scrollY;
+            
+            // Hide hero content after initial scroll
+            if (targetScrollY > 100) {
+                document.getElementById('hero-content').classList.add('hidden');
+                document.getElementById('scroll-prompt').classList.add('hidden');
+            }
+            
+            // Show features strip in middle of journey
+            if (targetScrollY > window.innerHeight * 2 && targetScrollY < window.innerHeight * 8) {
+                document.getElementById('features-strip').classList.add('visible');
+            } else {
+                document.getElementById('features-strip').classList.remove('visible');
+            }
+        }
+        
+        // Adjust wireframe opacity based on scene
+        function adjustWireframeOpacity(targetOpacity) {
+            if (mainFactory) {
+                mainFactory.traverse((child) => {
+                    if (child.userData.wireframeMaterial) {
+                        anime({
+                            targets: child.userData.wireframeMaterial,
+                            opacity: targetOpacity,
+                            duration: 800,
+                            easing: 'easeInOutQuad'
+                        });
+                    }
+                });
+            }
+        }
+        
+        function updateCamera() {
+            // Smooth scroll interpolation
+            const scrollDelta = targetScrollY - currentScrollY;
+            scrollVelocity += scrollDelta * 0.015;
+            scrollVelocity *= 0.88;
+            currentScrollY += scrollVelocity;
+            
+            const maxScroll = document.body.scrollHeight - window.innerHeight;
+            const scrollProgress = Math.max(0, Math.min(1, currentScrollY / maxScroll));
+            
+            const sceneFloat = scrollProgress * (scenes.length - 1);
+            const sceneIndex = Math.floor(sceneFloat);
+            const sceneProgress = sceneFloat - sceneIndex;
+            
+            // Update scene if changed
+            if (sceneIndex !== currentScene) {
+                currentScene = sceneIndex;
+                updateHUD(currentScene);
+                
+                // Adjust wireframe opacity - lower for first scene, higher for others
+                if (currentScene === 0) {
+                    adjustWireframeOpacity(0.3);
+                } else if (currentScene === 1) {
+                    adjustWireframeOpacity(0.5);
+                } else {
+                    adjustWireframeOpacity(0.8);
+                }
+                
+                // Show modal for this scene if configured
+                showModal(currentScene);
+            }
+            
+            const scene1 = scenes[Math.min(sceneIndex, scenes.length - 1)];
+            const scene2 = scenes[Math.min(sceneIndex + 1, scenes.length - 1)];
+            
+            // Smooth easing
+            const easedProgress = sceneProgress < 0.5 
+                ? 2 * sceneProgress * sceneProgress 
+                : 1 - Math.pow(-2 * sceneProgress + 2, 2) / 2;
+            
+            // Interpolate camera position
+            const targetCameraX = scene1.camera.x + (scene2.camera.x - scene1.camera.x) * easedProgress;
+            const targetCameraY = scene1.camera.y + (scene2.camera.y - scene1.camera.y) * easedProgress;
+            const targetCameraZ = scene1.camera.z + (scene2.camera.z - scene1.camera.z) * easedProgress;
+            
+            camera.position.x += (targetCameraX - camera.position.x) * 0.08;
+            camera.position.y += (targetCameraY - camera.position.y) * 0.08;
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.08;
+            
+            // Interpolate look-at target
+            const targetLookX = scene1.target.x + (scene2.target.x - scene1.target.x) * easedProgress;
+            const targetLookY = scene1.target.y + (scene2.target.y - scene1.target.y) * easedProgress;
+            const targetLookZ = scene1.target.z + (scene2.target.z - scene1.target.z) * easedProgress;
+            
+            camera.lookAt(targetLookX, targetLookY, targetLookZ);
+            
+            // Update model rotation
+            if (mainFactory) {
+                const targetRotX = scene1.rotation.x + (scene2.rotation.x - scene1.rotation.x) * easedProgress;
+                const targetRotY = scene1.rotation.y + (scene2.rotation.y - scene1.rotation.y) * easedProgress;
+                const targetRotZ = scene1.rotation.z + (scene2.rotation.z - scene1.rotation.z) * easedProgress;
+                
+                mainFactory.rotation.x += (targetRotX - mainFactory.rotation.x) * 0.05;
+                mainFactory.rotation.y += (targetRotY - mainFactory.rotation.y) * 0.05;
+                mainFactory.rotation.z += (targetRotZ - mainFactory.rotation.z) * 0.05;
+            }
+        }
+        
+        // Animation loop
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+            
+            updateCamera();
+            
+            // Subtle idle animation
+            if (mainFactory) {
+                mainFactory.position.y = Math.sin(elapsedTime * 0.5) * 2;
+                
+                // Rotate the chip grid
+                if (mainFactory.userData.chipGrid) {
+                    mainFactory.userData.chipGrid.rotation.y += mainFactory.userData.chipGrid.userData.rotationSpeed;
+                    
+                    // Add floating animation to chips
+                    mainFactory.userData.chipGrid.children.forEach((child, index) => {
+                        if (child.isMesh || child.type === 'Group') {
+                            const offset = index * 0.1;
+                            child.position.y = child.userData.baseY || child.position.y;
+                            if (!child.userData.baseY) child.userData.baseY = child.position.y;
+                            child.position.y = child.userData.baseY + Math.sin(elapsedTime * 0.8 + offset) * 1.5;
+                        }
+                    });
+                    
+                    // Pulse neural connections
+                    const connectionGroup = mainFactory.userData.chipGrid.userData.connectionGroup;
+                    if (connectionGroup) {
+                        connectionGroup.children.forEach((line, index) => {
+                            if (line.material) {
+                                const pulse = 0.3 + Math.sin(elapsedTime * 2 + index * 0.2) * 0.3;
+                                line.material.opacity = pulse;
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Animate tracking brackets position
+            const brackets = document.getElementById('tracking-brackets');
+            if (brackets && currentScene < 3) {
+                const offsetX = Math.sin(elapsedTime) * 20;
+                const offsetY = Math.cos(elapsedTime * 0.8) * 15;
+                brackets.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+            }
+            
+            // Animate radar dots
+            const radarDots = document.querySelectorAll('.radar-dot');
+            radarDots.forEach((dot, index) => {
+                const angle = elapsedTime + index * Math.PI / 3;
+                const radius = 40 + Math.sin(elapsedTime * 2 + index) * 10;
+                dot.style.left = `${50 + Math.cos(angle) * radius}%`;
+                dot.style.top = `${50 + Math.sin(angle) * radius}%`;
+            });
+            
+            // Update crosshair rotation
+            const crosshair = document.getElementById('crosshair');
+            if (crosshair.style.opacity > 0) {
+                crosshair.style.transform = `translate(-50%, -50%) rotate(${elapsedTime * 10}deg)`;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Event listeners
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize
+        async function init() {
+            await loadModels();
+            
+            // Hide loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            anime({
+                targets: loadingScreen,
+                opacity: 0,
+                duration: 500,
+                easing: 'easeOutQuad',
+                complete: () => {
+                    loadingScreen.style.display = 'none';
+                }
+            });
+            
+            initHUD();
+            updateHUD(0);
+            animate();
+            
+            // Show initial modal after a short delay
+            setTimeout(() => {
+                showModal(0);
+            }, 2000);
+        }
+        
+        init();
+    </script>
+    <!-- Modal System -->
+    <div class="modal-container" id="modal-container">
+        <div class="modal-content" id="modal-content">
+            <h3 class="modal-title" id="modal-title"></h3>
+            <p class="modal-text" id="modal-text"></p>
+            <button class="modal-close" onclick="closeModal()">Continue Journey</button>
+        </div>
+    </div>
+
+    <style>
+        /* Modal Styles */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-container.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #3b82f6;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+        }
+        
+        .modal-container.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-title {
+            color: #1e40af;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .modal-text {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .modal-close {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+
+    <script>
+        // Modal content for each scene
+        const modalContent = [
+            {
+                title: "Welcome to the Tribble Agent Factory",
+                text: "Scale expertise across your company with Tribble - your digital teammate that seamlessly integrates with Slack, Salesforce, Zendesk, and your knowledge bases. This is where AI agents are built to amplify your team's capabilities."
+            },
+            {
+                title: "Multi-System Integration Layer",
+                text: "Tribble connects with all your existing tools in real-time. Unlike traditional automation, Tribble creates a unified knowledge layer across Salesforce, Zendesk, Google Drive, and more - making every system work as one."
+            },
+            {
+                title: "Real-Time Processing Engine",
+                text: "Process thousands of requests simultaneously with zero latency. Sales teams save 800 hours per month generating expert-level RFx responses and proposals, while pre-sales achieves 85% productivity increases through instant technical answers."
+            },
+            {
+                title: "Active Learning Templates",
+                text: "Tribble doesn't just respond - it learns. From automating security questionnaires to generating personalized training, Tribble continuously improves by learning from your organizational data and identifying knowledge gaps proactively."
+            },
+            {
+                title: "Knowledge Generation Core",
+                text: "Watch as Tribble automatically generates documentation and fills knowledge gaps. Product teams report 50% efficiency improvements as Tribble identifies missing information and creates comprehensive documentation without manual effort."
+            },
+            {
+                title: "Workflow Automation Pipeline",
+                text: "Deploy Tribble across Sales, Pre-Sales, Enablement, and Product workflows. Each agent is configured to your specific needs, delivering personalized responses and taking proactive actions based on your business rules."
+            },
+            {
+                title: "Tribblytics Intelligence Gateway",
+                text: "Gain real-time insights into how your digital teammate is performing. Tribblytics provides comprehensive analytics on agent interactions, knowledge utilization, and productivity gains across your organization."
+            },
+            {
+                title: "Agent Configuration Builder",
+                text: "Build custom agents tailored to your unique workflows. Whether it's RFx automation saving 800 hours monthly or enablement programs saving 1,275 hours, configure Tribble to match your exact business needs."
+            },
+            {
+                title: "Execution Runtime Environment",
+                text: "Tribble operates 24/7 as your always-on digital teammate. With active learning and real-time processing, it handles complex tasks autonomously while seamlessly integrating into your team's daily workflow."
+            },
+            {
+                title: "Your Tribble Command Center",
+                text: "Welcome to the future of work. From here, deploy Tribble across your organization, monitor performance through Tribblytics, and watch as your team's expertise scales exponentially. Your digital teammate is ready to transform how work gets done."
+            }
+        ];
+        
+        // Modal functions
+        let modalShown = new Array(scenes.length).fill(false);
+        
+        function showModal(sceneIndex) {
+            console.log('Showing modal for scene:', sceneIndex);
+            if (modalContent[sceneIndex] && !modalShown[sceneIndex]) {
+                const modal = document.getElementById('modal-container');
+                document.getElementById('modal-title').textContent = modalContent[sceneIndex].title;
+                document.getElementById('modal-text').textContent = modalContent[sceneIndex].text;
+                
+                // Show modal immediately with proper display
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    modalShown[sceneIndex] = true;
+                }, 10);
+            }
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('modal-container');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    </script>
+
+</body>
+</html>

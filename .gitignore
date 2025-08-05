@@ -1,0 +1,10 @@
+# Large model files
+models/microchip_prototype.glb
+
+# OS files
+.DS_Store
+
+# Editor files
+.vscode/
+*.swp
+*.swo
