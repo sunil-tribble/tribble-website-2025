@@ -2098,11 +2098,7 @@
         function handleScroll() {
             targetScrollY = window.scrollY;
             
-            // Hide hero content after initial scroll
-            if (targetScrollY > 100) {
-                document.getElementById('hero-content').classList.add('hidden');
-                document.getElementById('scroll-prompt').classList.add('hidden');
-            }
+            // Hero content visibility is now handled in scene change logic
             
             // Show features strip in middle of journey
             if (targetScrollY > window.innerHeight * 2 && targetScrollY < window.innerHeight * 8) {
@@ -2144,17 +2140,29 @@
             
             // Update scene if changed
             if (sceneIndex !== currentScene) {
+                const previousScene = currentScene;
                 currentScene = sceneIndex;
                 lastSceneChange = Date.now();
                 updateHUD(currentScene);
                 
-                // Adjust wireframe opacity - lower for first scene, higher for others
+                // Hide any open overlays when changing scenes
+                hideAllOverlays();
+                
+                // Adjust wireframe opacity and show/hide hero content
                 if (currentScene === 0) {
                     adjustWireframeOpacity(0.3);
-                } else if (currentScene === 1) {
-                    adjustWireframeOpacity(0.5);
+                    // Show hero content on scene 0
+                    document.getElementById('hero-content').classList.remove('hidden');
+                    document.getElementById('scroll-prompt').classList.remove('hidden');
                 } else {
-                    adjustWireframeOpacity(0.8);
+                    if (currentScene === 1) {
+                        adjustWireframeOpacity(0.5);
+                    } else {
+                        adjustWireframeOpacity(0.8);
+                    }
+                    // Hide hero content on other scenes
+                    document.getElementById('hero-content').classList.add('hidden');
+                    document.getElementById('scroll-prompt').classList.add('hidden');
                 }
                 
                 // Clear any existing timer
@@ -2162,13 +2170,15 @@
                     clearTimeout(sceneStableTimer);
                 }
                 
-                // Set timer to show overlay after user settles at this zoom level
-                sceneStableTimer = setTimeout(() => {
-                    // Only show if we're still at the same scene
-                    if (currentScene === sceneIndex && !contentShown[sceneIndex]) {
-                        showContentOverlay(currentScene);
-                    }
-                }, 1500); // Wait 1.5 seconds for user to settle
+                // Show view details button after user settles at this zoom level (not on scene 0)
+                if (currentScene > 0) {
+                    sceneStableTimer = setTimeout(() => {
+                        // Only show button if we're still at the same scene
+                        if (currentScene === sceneIndex) {
+                            showViewDetailsButton();
+                        }
+                    }, 1200); // Wait 1.2 seconds for user to settle
+                }
             }
             
             const scene1 = scenes[Math.min(sceneIndex, scenes.length - 1)];
@@ -2302,34 +2312,53 @@
             updateHUD(0);
             animate();
             
-            // Show first overlay automatically after initial load
-            setTimeout(() => {
-                if (currentScene === 0) {
-                    showContentOverlay(0);
-                }
-            }, 3000);
+            // Scene 0 shows hero content, not overlay
         }
         
         // Content overlay management
         let contentShown = new Array(scenes.length).fill(false);
+        let currentOverlay = -1;
         
-        function showContentOverlay(sceneIndex) {
-            // Hide all overlays first
+        function hideAllOverlays() {
             for (let i = 0; i < scenes.length; i++) {
                 const overlay = document.getElementById(`content-overlay-${i}`);
                 if (overlay) {
+                    overlay.style.opacity = '0';
+                    overlay.style.display = 'none';
                     overlay.classList.remove('active');
                 }
             }
+            currentOverlay = -1;
+            contentShown.fill(false); // Reset all shown states
+            hideViewDetailsButton();
+        }
+        
+        function showContentOverlay(sceneIndex) {
+            // Don't show if it's not the current scene
+            if (sceneIndex !== currentScene) return;
             
-            // Show the specific overlay
-            const overlay = document.getElementById(`content-overlay-${sceneIndex}`);
-            if (overlay && !contentShown[sceneIndex]) {
-                setTimeout(() => {
-                    overlay.classList.add('active');
-                    contentShown[sceneIndex] = true;
-                }, 500);
-            }
+            // Hide all overlays first
+            hideAllOverlays();
+            
+            // Show the specific overlay after a short delay
+            setTimeout(() => {
+                const overlay = document.getElementById(`content-overlay-${sceneIndex}`);
+                if (overlay) {
+                    overlay.style.display = 'block';
+                    overlay.style.opacity = '0';
+                    
+                    // Force reflow
+                    overlay.offsetHeight;
+                    
+                    // Fade in
+                    setTimeout(() => {
+                        overlay.style.opacity = '1';
+                        overlay.classList.add('active');
+                        contentShown[sceneIndex] = true;
+                        currentOverlay = sceneIndex;
+                    }, 50);
+                }
+            }, 300);
         }
         
         window.closeContentOverlay = function(index) {
