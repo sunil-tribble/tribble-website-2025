@@ -245,8 +245,20 @@
             text-transform: uppercase;
         }
         
-        /* Hero content overlay */
-        .hero-content {
+        /* Hero content overlay - split layout */
+        .hero-top {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .hero-buttons {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -255,10 +267,10 @@
             z-index: 100;
             opacity: 1;
             transition: opacity 0.5s ease;
-            pointer-events: none;
+            pointer-events: auto;
         }
         
-        .hero-content.hidden {
+        .hero-top.hidden, .hero-buttons.hidden {
             opacity: 0;
         }
         
@@ -284,7 +296,7 @@
         .hero-subtitle {
             font-size: 1.2rem;
             color: #6B7280;
-            margin-bottom: 2rem;
+            margin-bottom: 0;
             font-weight: 300;
         }
         
@@ -944,15 +956,16 @@
         <div class="loading-text">INITIALIZING AGENT FACTORY</div>
     </div>
     
-    <!-- Hero content -->
-    <div class="hero-content" id="hero-content">
-        <img src="logo-static.svg" alt="Tribble" class="hero-logo-img" style="width: 200px; height: auto; margin-bottom: 20px;">
+    <!-- Hero content split into top and center -->
+    <div class="hero-top" id="hero-top">
+        <img src="logo-static.svg" alt="Tribble" class="hero-logo-img" style="width: 240px; height: auto; margin-bottom: 20px;">
         <p class="hero-tagline">The Enterprise Intelligence Platform</p>
         <p class="hero-subtitle">Where Every Workflow Learns</p>
-        <div>
-            <a href="#" class="hero-cta">See Tribble in Action</a>
-            <a href="#" class="hero-cta secondary">Book Demo</a>
-        </div>
+    </div>
+    
+    <div class="hero-buttons" id="hero-buttons">
+        <a href="#" class="hero-cta">See Tribble in Action</a>
+        <a href="#" class="hero-cta secondary">Book Demo</a>
     </div>
     
     <!-- Features strip -->
@@ -2256,10 +2269,14 @@
                 
                 // Auto-show overlay after user settles at this zoom level (not on scene 0)
                 if (currentScene > 0) {
+                    console.log('Scene changed to:', currentScene, 'Will auto-show overlay in 1.2s');
                     sceneStableTimer = setTimeout(() => {
                         // Only show overlay if we're still at the same scene and it hasn't been shown
                         if (currentScene === sceneIndex && !contentShown[sceneIndex]) {
+                            console.log('Auto-showing overlay for scene:', currentScene);
                             showContentOverlay(currentScene);
+                        } else {
+                            console.log('Not showing overlay. Current:', currentScene, 'Index:', sceneIndex, 'Shown:', contentShown[sceneIndex]);
                         }
                     }, 1200); // Wait 1.2 seconds for user to settle
                 }
@@ -2416,8 +2433,12 @@
         }
         
         function showContentOverlay(sceneIndex) {
+            console.log('showContentOverlay called for scene:', sceneIndex, 'Current scene:', currentScene);
             // Don't show if it's not the current scene
-            if (sceneIndex !== currentScene) return;
+            if (sceneIndex !== currentScene) {
+                console.log('Not showing overlay - scene mismatch');
+                return;
+            }
             
             // Hide all overlays first
             hideAllOverlays();
@@ -2425,11 +2446,15 @@
             // Show the specific overlay after a short delay
             setTimeout(() => {
                 const overlay = document.getElementById(`content-overlay-${sceneIndex}`);
+                console.log('Looking for overlay:', `content-overlay-${sceneIndex}`, 'Found:', !!overlay);
                 if (overlay) {
                     overlay.classList.add('active');
                     contentShown[sceneIndex] = true;
                     currentOverlay = sceneIndex;
                     hideViewDetailsButton();
+                    console.log('Overlay shown for scene:', sceneIndex);
+                } else {
+                    console.error('Overlay not found for scene:', sceneIndex);
                 }
             }, 300);
         }
