@@ -1,0 +1,2440 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tribble - The Enterprise Intelligence Platform</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        :root {
+            --primary: #0F172A;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-light: #dbeafe;
+            --accent-cyan: #00ffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --bg-light: #f8fafc;
+            --success: #10b981;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            --gradient-dark: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            height: 1800vh;
+        }
+        
+        /* Canvas container for 3D scene */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        /* HUD Overlay */
+        .hud-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 40;
+        }
+        
+        /* HUD Frame Elements */
+        .hud-frame {
+            position: absolute;
+            border: 2px solid var(--accent);
+            opacity: 0.8;
+        }
+        
+        .hud-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--accent);
+            z-index: 45;
+        }
+        
+        .hud-corner.top-left {
+            top: 40px;
+            left: 40px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .hud-corner.top-right {
+            top: 40px;
+            right: 40px;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .hud-corner.bottom-left {
+            bottom: 40px;
+            left: 40px;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .hud-corner.bottom-right {
+            bottom: 40px;
+            right: 40px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* Scanning lines */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            opacity: 0;
+        }
+        
+        /* Data readouts */
+        .data-readout {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--accent);
+            padding: 8px 12px;
+            font-size: 11px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #1e40af;
+            opacity: 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .data-label {
+            color: var(--text-secondary);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .data-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-top: 2px;
+        }
+        
+        /* Scene info */
+        .scene-info {
+            position: absolute;
+            top: 100px;
+            left: 60px;
+            opacity: 0;
+            z-index: 50;
+        }
+        
+        .scene-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e40af;
+            letter-spacing: -0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .scene-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Tech grid overlay */
+        .tech-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.5;
+        }
+        
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* Enhanced Hero Content */
+        .hero-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 1;
+            transition: all 0.5s ease;
+            pointer-events: none;
+            max-width: 1000px;
+            width: 90%;
+        }
+        
+        .hero-content.hidden {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--accent);
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .hero-logo {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            letter-spacing: -3px;
+            background: var(--gradient-dark);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-logo .highlight {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-tagline {
+            font-size: 1.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 300;
+            line-height: 1.4;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-cta-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-cta {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+        }
+        
+        .hero-cta:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .hero-cta.secondary {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .hero-cta.secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Trust Indicators */
+        .trust-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            pointer-events: none;
+        }
+        
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .trust-item strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        /* Trust Strip for separate scene - REMOVED */
+        .trust-strip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            grid-template-columns: repeat(2, 2fr);
+            gap: 2rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        .trust-strip.visible {
+            opacity: 1;
+        }
+        
+        .trust-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(20px);
+        }
+        
+        .trust-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .trust-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        /* Platform Capabilities Strip */
+        .capabilities-strip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            max-width: 900px;
+            width: 90%;
+        }
+        
+        .capabilities-strip.visible {
+            display: grid;
+            opacity: 1;
+        }
+        
+        .capability-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.2rem;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .capability-item::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            border-radius: 12px;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .capability-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+        
+        .capability-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .capability-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.3rem;
+        }
+        
+        .capability-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        
+        /* Organizational Memory Card */
+        .org-memory-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .org-memory-card.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .memory-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            text-align: center;
+        }
+        
+        .memory-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        
+        .memory-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .memory-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .memory-feature {
+            text-align: center;
+        }
+        
+        .memory-feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .memory-feature-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .memory-feature-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Workflow Automation Content */
+        .workflow-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .workflow-content.visible {
+            opacity: 1;
+        }
+        
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .workflow-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .workflow-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+        
+        .workflow-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .workflow-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .workflow-metric {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .workflow-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Integration Showcase */
+        .integration-showcase {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1100px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .integration-showcase.visible {
+            opacity: 1;
+        }
+        
+        .integration-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .integration-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        
+        .integration-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+        
+        .integration-logos {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .integration-logo {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .integration-logo:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.2);
+        }
+        
+        .integration-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        /* Enhanced Testimonials */
+        .testimonials-carousel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .testimonials-carousel.visible {
+            opacity: 1;
+        }
+        
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+        
+        .testimonial-item {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+        }
+        
+        .testimonial-stars {
+            color: #fbbf24;
+            margin-bottom: 1rem;
+        }
+        
+        .testimonial-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        
+        .testimonial-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .testimonial-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+        
+        .testimonial-info {
+            flex: 1;
+        }
+        
+        .testimonial-name {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .testimonial-role {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Use Cases Section */
+        .use-cases-section {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .use-cases-section.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .use-cases-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .use-case-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            display: none;
+        }
+        
+        .use-case-content.active {
+            display: block;
+        }
+        
+        /* ROI Metrics */
+        .roi-strip {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            width: 90%;
+            max-width: 900px;
+        }
+        
+        .roi-strip.visible {
+            opacity: 1;
+        }
+        
+        .roi-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--accent);
+        }
+        
+        .roi-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .roi-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Testimonial Card */
+        .testimonial-card {
+            position: fixed;
+            top: 50%;
+            right: 60px;
+            transform: translateY(-50%);
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 100;
+        }
+        
+        .testimonial-card.visible {
+            opacity: 1;
+        }
+        
+        .testimonial-quote {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .author-info {
+            flex: 1;
+        }
+        
+        .author-name {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .author-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Scroll prompt */
+        .scroll-prompt {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        
+        .scroll-prompt.hidden {
+            opacity: 0;
+        }
+        
+        .scroll-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .scroll-arrow {
+            width: 30px;
+            height: 30px;
+            border-right: 2px solid var(--accent);
+            border-bottom: 2px solid var(--accent);
+            transform: rotate(45deg);
+            margin: 0 auto;
+            animation: scrollBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes scrollBounce {
+            0%, 100% { transform: rotate(45deg) translateY(0); }
+            50% { transform: rotate(45deg) translateY(5px); }
+        }
+        
+        /* Enhanced Analysis Panel */
+        .analysis-panel {
+            position: absolute;
+            top: 50%;
+            right: 60px;
+            transform: translateY(-50%);
+            width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            border-radius: 12px;
+        }
+        
+        .analysis-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        
+        .analysis-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .analysis-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        .cta-section.visible {
+            opacity: 1;
+        }
+        
+        .cta-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .btn-large {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: 2px solid transparent;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 35;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 1rem 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .nav-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .nav-bar.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: var(--accent);
+        }
+        
+        .nav-cta {
+            background: var(--accent);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .nav-cta:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        
+        /* Additional HUD elements for visual interest */
+        .particle-field {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #60a5fa;
+            border-radius: 50%;
+            animation: particleDrift 15s linear infinite;
+        }
+        
+        @keyframes particleDrift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(var(--drift-x), var(--drift-y)); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-logo {
+                font-size: 3rem;
+            }
+            
+            .hero-tagline {
+                font-size: 1.3rem;
+            }
+            
+            .capabilities-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .roi-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .testimonial-card {
+                display: none;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+        }
+    </style>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen" style="opacity: 0; display: none;">
+        <div class="loading-text">INITIALIZING AGENTIC PLATFORM</div>
+    </div>
+    
+    <!-- Navigation Bar -->
+    <nav class="nav-bar hidden" id="nav-bar" style="opacity: 0;">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">TRIBBLE</a>
+            <div class="nav-menu">
+                <a href="#platform" class="nav-link">Platform</a>
+                <a href="#solutions" class="nav-link">Solutions</a>
+                <a href="#customers" class="nav-link">Customers</a>
+                <a href="#resources" class="nav-link">Resources</a>
+                <a href="#demo" class="nav-cta">Book Demo</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Enhanced Hero Content -->
+    <div class="hero-content" id="hero-content">
+        <div class="hero-badge">🧠 NEW: Enterprise Intelligence Now Available</div>
+        <h1 class="hero-logo">TRIBBLE</h1>
+        <p class="hero-tagline">The Enterprise Intelligence Platform</p>
+        <p class="hero-subtitle">Transform your organization into a unified learning system where every process gets smarter and every team operates with collective genius</p>
+        <div class="hero-cta-container">
+            <a href="#demo" class="hero-cta">Activate Your Intelligence</a>
+            <a href="#solutions" class="hero-cta secondary">See Intelligence in Action</a>
+        </div>
+        <div class="trust-indicators">
+            <div class="trust-item">
+                <span>🏢</span>
+                <span><strong>300+</strong> Enterprise Customers</span>
+            </div>
+            <div class="trust-item">
+                <span>⚡</span>
+                <span><strong>5M+</strong> Tasks Automated</span>
+            </div>
+            <div class="trust-item">
+                <span>🔒</span>
+                <span><strong>SOC 2</strong> Type II</span>
+            </div>
+            <div class="trust-item">
+                <span>⏱️</span>
+                <span><strong>90%</strong> Time Saved</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Platform Capabilities Strip (Hidden until scroll) -->
+    <div class="capabilities-strip visible" id="capabilities-strip" style="display: none !important; opacity: 0 !important; transition: opacity 0.5s;">
+        <div class="capability-item">
+            <div class="capability-icon">🤖</div>
+            <div class="capability-title">Distributed Thinking</div>
+            <div class="capability-desc">Thousands of intelligent agents working as one</div>
+        </div>
+        <div class="capability-item">
+            <div class="capability-icon">🧠</div>
+            <div class="capability-title">Collective Memory</div>
+            <div class="capability-desc">Your organization's genius, captured forever</div>
+        </div>
+        <div class="capability-item">
+            <div class="capability-icon">⚡</div>
+            <div class="capability-title">Autonomous Action</div>
+            <div class="capability-desc">Intelligence that acts without asking</div>
+        </div>
+        <div class="capability-item">
+            <div class="capability-icon">🔄</div>
+            <div class="capability-title">Unified Intelligence</div>
+            <div class="capability-desc">Every system thinking together</div>
+        </div>
+        <div class="capability-item">
+            <div class="capability-icon">📊</div>
+            <div class="capability-title">Continuous Learning</div>
+            <div class="capability-desc">Intelligence that improves itself</div>
+        </div>
+        <div class="capability-item">
+            <div class="capability-icon">💬</div>
+            <div class="capability-title">Natural Interface</div>
+            <div class="capability-desc">Intelligence that speaks your language</div>
+        </div>
+    </div>
+    
+    <!-- Organizational Memory Card -->
+    <div class="org-memory-card" id="org-memory-card" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="memory-content">
+            <h2 class="memory-title">Intelligence Captured Forever</h2>
+            <p class="memory-subtitle">Transform every interaction, decision, and insight into permanent organizational intelligence</p>
+            
+            <div class="memory-features">
+                <div class="memory-feature">
+                    <div class="memory-feature-icon">🧠</div>
+                    <div class="memory-feature-title">Intelligence Graph</div>
+                    <div class="memory-feature-desc">Every connection strengthens collective thinking</div>
+                </div>
+                <div class="memory-feature">
+                    <div class="memory-feature-icon">🔍</div>
+                    <div class="memory-feature-title">Pattern Recognition</div>
+                    <div class="memory-feature-desc">Discovers hidden intelligence in your operations</div>
+                </div>
+                <div class="memory-feature">
+                    <div class="memory-feature-icon">🎯</div>
+                    <div class="memory-feature-title">Intelligence Routing</div>
+                    <div class="memory-feature-desc">Connects questions to collective wisdom instantly</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Workflow Automation Content -->
+    <div class="workflow-content" id="workflow-content" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="workflow-grid">
+            <div class="workflow-card">
+                <div class="workflow-icon">💼</div>
+                <div class="workflow-title">Sales Intelligence</div>
+                <div class="workflow-metric">800hrs/mo</div>
+                <div class="workflow-desc">Saved on RFP responses with 90% faster completion</div>
+            </div>
+            <div class="workflow-card">
+                <div class="workflow-icon">📈</div>
+                <div class="workflow-title">Technical Intelligence</div>
+                <div class="workflow-metric">85%</div>
+                <div class="workflow-desc">Productivity increase through instant technical answers</div>
+            </div>
+            <div class="workflow-card">
+                <div class="workflow-icon">🎓</div>
+                <div class="workflow-title">Learning Amplification</div>
+                <div class="workflow-metric">1,275hrs</div>
+                <div class="workflow-desc">Reclaimed monthly with automated training</div>
+            </div>
+            <div class="workflow-card">
+                <div class="workflow-icon">🔒</div>
+                <div class="workflow-title">Compliance Intelligence</div>
+                <div class="workflow-metric">92%</div>
+                <div class="workflow-desc">Auto-completion rate with compliance accuracy</div>
+            </div>
+            <div class="workflow-card">
+                <div class="workflow-icon">📊</div>
+                <div class="workflow-title">Product Wisdom</div>
+                <div class="workflow-metric">50%</div>
+                <div class="workflow-desc">Efficiency improvement in documentation</div>
+            </div>
+            <div class="workflow-card">
+                <div class="workflow-icon">🚀</div>
+                <div class="workflow-title">Operational Genius</div>
+                <div class="workflow-metric">5,600</div>
+                <div class="workflow-desc">Questions answered per month automatically</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Integration Showcase -->
+    <div class="integration-showcase" id="integration-showcase" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="integration-header">
+            <h2 class="integration-title">Unified Intelligence Layer</h2>
+            <p class="integration-subtitle">Every system in your organization contributing to collective intelligence</p>
+        </div>
+        <div class="integration-logos">
+            <div class="integration-logo">
+                <div class="integration-name">Salesforce</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Slack</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Microsoft Teams</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">HubSpot</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Zendesk</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Google Drive</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Jira</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Confluence</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">SharePoint</div>
+            </div>
+            <div class="integration-logo">
+                <div class="integration-name">Gong</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Testimonials Carousel -->
+    <div class="testimonials-carousel" id="testimonials-carousel" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="testimonial-grid">
+            <div class="testimonial-item">
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <div class="testimonial-text">
+                    "Tribble has been a game-changer for our RFP process. What used to take days now takes hours. The platform learns from every response and gets smarter over time."
+                </div>
+                <div class="testimonial-meta">
+                    <div class="testimonial-avatar">MS</div>
+                    <div class="testimonial-info">
+                        <div class="testimonial-name">Michael Stevens</div>
+                        <div class="testimonial-role">VP Sales Engineering, TechCorp</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-item">
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <div class="testimonial-text">
+                    "99% of our team would recommend Tribble. It's not just a tool, it's like having an extra team member who never sleeps and knows everything."
+                </div>
+                <div class="testimonial-meta">
+                    <div class="testimonial-avatar">SJ</div>
+                    <div class="testimonial-info">
+                        <div class="testimonial-name">Sarah Johnson</div>
+                        <div class="testimonial-role">Director of Operations, StartupCo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Use Cases Section -->
+    <div class="use-cases-section" id="use-cases" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="use-cases-tabs">
+            <button class="tab-btn active" data-tab="sales">Sales</button>
+            <button class="tab-btn" data-tab="marketing">Marketing</button>
+            <button class="tab-btn" data-tab="cs">Customer Success</button>
+            <button class="tab-btn" data-tab="product">Product</button>
+            <button class="tab-btn" data-tab="ops">Operations</button>
+        </div>
+        <div class="use-case-content active" data-content="sales">
+            <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">Sales Intelligence: Your Team Operating at Genius Level</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Watch as Tribble orchestrates complex, multi-step workflows that transform your sales organization into a unified intelligence system.</p>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🎧 Weekly Call Intelligence &amp; Autonomous Training</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every Monday at 6 AM, Tribble automatically:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes 1,000+ Gong calls</strong> from the past week across your entire enterprise segment</li>
+                    <li><strong>Identifies skill gaps</strong> using pattern recognition - objection handling, pricing discussions, technical depth</li>
+                    <li><strong>Generates personalized training</strong> for each rep based on their specific weaknesses</li>
+                    <li><strong>Creates real-world simulations</strong> by pulling actual opportunities from Salesforce and researching real contacts</li>
+                    <li><strong>Deploys training in Slack</strong> with interactive role-play scenarios using your actual prospects</li>
+                    <li><strong>Measures competence</strong> through responses and adjusts difficulty in real-time</li>
+                    <li><strong>Reports to management</strong> with completion rates, skill improvements, and recommended next actions</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 47% improvement in close rates within 60 days</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🎯 Account Intelligence &amp; Automatic Outreach</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">For every new opportunity created, Tribble instantly:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Researches the company</strong> across 50+ sources including news, social, financials, and job postings</li>
+                    <li><strong>Maps the buying committee</strong> by analyzing LinkedIn, conference speakers, and org charts</li>
+                    <li><strong>Identifies trigger events</strong> - new funding, leadership changes, competitor switches</li>
+                    <li><strong>Analyzes past interactions</strong> with similar accounts to predict winning strategies</li>
+                    <li><strong>Generates hyper-personalized sequences</strong> for each stakeholder based on their role and interests</li>
+                    <li><strong>Automatically enriches Salesforce</strong> with 50+ new data points per account</li>
+                    <li><strong>Schedules optimal outreach</strong> based on engagement patterns from 10,000+ past deals</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 3.5 hours saved per opportunity, 62% higher response rates</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">📊 RFP Intelligence &amp; Response Orchestration</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">When an RFP arrives, Tribble orchestrates a complete response system:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Extracts 500+ requirements</strong> from complex documents using vision AI</li>
+                    <li><strong>Matches requirements to past wins</strong> analyzing 10,000+ previous RFP responses</li>
+                    <li><strong>Identifies competitive differentiators</strong> by comparing against known competitor responses</li>
+                    <li><strong>Assigns specialized agents</strong> - technical for architecture, legal for compliance, financial for pricing</li>
+                    <li><strong>Coordinates SME input</strong> by routing specific questions to experts via Slack with context</li>
+                    <li><strong>Generates win themes</strong> based on customer's strategic initiatives and pain points</li>
+                    <li><strong>Creates response in customer's voice</strong> by analyzing their internal documents and communications</li>
+                    <li><strong>Produces executive summary</strong> with ROI calculations specific to their industry and size</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 5-day RFPs completed in 4 hours with 3x higher win rate</p>
+            </div>
+        </div>
+        <div class="use-case-content" data-content="marketing">
+            <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">Marketing Intelligence: Campaigns That Think &amp; Adapt</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Tribble transforms marketing from campaigns to intelligent systems that learn, adapt, and optimize in real-time.</p>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🚀 Product Launch Intelligence System</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">For every product launch, Tribble orchestrates 50+ parallel workflows:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes competitor launches</strong> across 200+ sources to identify what worked and what failed</li>
+                    <li><strong>Segments audience into 50+ micro-cohorts</strong> based on behavior, firmographics, and intent signals</li>
+                    <li><strong>Generates 1,000+ content variations</strong> - emails, social posts, ads, landing pages, videos scripts</li>
+                    <li><strong>A/B tests messaging in real-time</strong> across channels and automatically scales winners</li>
+                    <li><strong>Creates personalized demos</strong> for each prospect using their actual data and use cases</li>
+                    <li><strong>Orchestrates influencer outreach</strong> by identifying and engaging 100+ relevant voices</li>
+                    <li><strong>Monitors social sentiment</strong> and adjusts messaging within minutes of detecting issues</li>
+                    <li><strong>Predicts and prevents churn</strong> by analyzing early usage patterns against historical data</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 300% increase in launch velocity, 5x pipeline generation</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🧠 Content Intelligence Factory</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every week, Tribble's content intelligence system:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes trending topics</strong> across your industry from 10,000+ sources</li>
+                    <li><strong>Identifies content gaps</strong> by comparing your library against competitor and search data</li>
+                    <li><strong>Interviews internal experts</strong> via automated Slack conversations to capture insights</li>
+                    <li><strong>Transforms one piece into 50 formats</strong> - blog, video, podcast, infographic, social threads</li>
+                    <li><strong>Personalizes for 20+ personas</strong> adjusting tone, examples, and complexity</li>
+                    <li><strong>Optimizes for SEO in real-time</strong> based on SERP changes and competitor movements</li>
+                    <li><strong>Distributes across 30+ channels</strong> with timing optimized per platform</li>
+                    <li><strong>Measures engagement and iterates</strong> updating content based on performance data</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 400% increase in organic traffic, 60% reduction in content costs</p>
+            </div>
+        </div>
+        <div class="use-case-content" data-content="cs">
+            <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">Customer Intelligence: Every Customer at Their Healthiest</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Tribble transforms customer success from reactive support to predictive intelligence that prevents issues before they arise.</p>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🔮 Churn Prevention Intelligence Network</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every 6 hours, Tribble's prevention system:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes 500+ health signals</strong> from product usage, support tickets, and engagement data</li>
+                    <li><strong>Detects micro-patterns</strong> that preceded churn in similar accounts over past 5 years</li>
+                    <li><strong>Identifies the 'why' behind risk</strong> by analyzing support conversations and feature requests</li>
+                    <li><strong>Generates rescue playbooks</strong> specific to each account's industry, size, and use case</li>
+                    <li><strong>Assigns the optimal CSM</strong> based on personality match and past success patterns</li>
+                    <li><strong>Creates personalized re-engagement campaigns</strong> targeting specific users within account</li>
+                    <li><strong>Orchestrates executive outreach</strong> when C-level intervention could make the difference</li>
+                    <li><strong>Monitors intervention success</strong> and adjusts tactics in real-time based on response</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 67% reduction in churn, $4.2M in saved ARR quarterly</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🎆 Intelligent Expansion Orchestration</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">For every customer showing growth signals, Tribble automatically:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Maps usage patterns to expansion opportunities</strong> across 100+ use cases</li>
+                    <li><strong>Identifies budget cycles and buying windows</strong> from financial reports and past purchases</li>
+                    <li><strong>Discovers new stakeholders</strong> who could benefit from the platform</li>
+                    <li><strong>Creates ROI stories</strong> using the customer's actual data and success metrics</li>
+                    <li><strong>Generates expansion proposals</strong> tailored to their industry and growth stage</li>
+                    <li><strong>Orchestrates multi-touch campaigns</strong> to users, buyers, and executives</li>
+                    <li><strong>Times outreach perfectly</strong> based on engagement peaks and decision patterns</li>
+                    <li><strong>Handles objections proactively</strong> by addressing concerns before they're raised</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 125% net revenue retention, 3x expansion velocity</p>
+            </div>
+        </div>
+        <div class="use-case-content" data-content="product">
+            <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">Product Intelligence: Building What Users Need Before They Ask</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Tribble transforms product development from guesswork to intelligence-driven innovation that anticipates user needs.</p>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🔍 Continuous Discovery Intelligence Engine</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every day, Tribble's discovery system processes:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>10,000+ user sessions</strong> to identify friction points and rage clicks</li>
+                    <li><strong>Analyzes support tickets</strong> to extract feature requests hidden in complaints</li>
+                    <li><strong>Monitors competitor releases</strong> and correlates with customer churn patterns</li>
+                    <li><strong>Interviews users automatically</strong> via in-app surveys triggered by specific behaviors</li>
+                    <li><strong>Synthesizes feedback</strong> from Slack, forums, reviews into prioritized insights</li>
+                    <li><strong>Generates feature specs</strong> complete with user stories, acceptance criteria, and mockups</li>
+                    <li><strong>Calculates ROI predictions</strong> based on similar features' impact in your industry</li>
+                    <li><strong>Creates A/B test plans</strong> to validate assumptions before full development</li>
+                    <li><strong>Updates roadmap dynamically</strong> based on emerging patterns and strategic value</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 73% reduction in feature failure rate, 4x faster time-to-market</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">📝 Autonomous Documentation System</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">With every code deployment, Tribble automatically:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes code changes</strong> to understand new functionality and modifications</li>
+                    <li><strong>Updates API documentation</strong> with examples in 10 programming languages</li>
+                    <li><strong>Generates user guides</strong> with screenshots and videos for different personas</li>
+                    <li><strong>Creates release notes</strong> tailored to technical, business, and executive audiences</li>
+                    <li><strong>Updates help center articles</strong> and identifies documentation gaps</li>
+                    <li><strong>Produces training materials</strong> for customer success and sales teams</li>
+                    <li><strong>Translates everything</strong> into 20 languages with cultural adaptations</li>
+                    <li><strong>Tests documentation accuracy</strong> by attempting to follow its own instructions</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 90% reduction in documentation debt, 60% fewer support tickets</p>
+            </div>
+        </div>
+        <div class="use-case-content" data-content="ops">
+            <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">Operations Intelligence: Self-Optimizing Business Systems</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Tribble transforms operations from process management to intelligent systems that optimize themselves continuously.</p>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🎯 Intelligent Resource Orchestration</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every morning at 5 AM, Tribble's operations intelligence:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Analyzes calendars, projects, and capacity</strong> across 500+ employees</li>
+                    <li><strong>Predicts bottlenecks</strong> 2 weeks in advance using historical patterns</li>
+                    <li><strong>Identifies skill gaps</strong> for upcoming projects and suggests training or hiring</li>
+                    <li><strong>Optimizes team composition</strong> based on personality, skills, and past collaboration success</li>
+                    <li><strong>Automatically reassigns tasks</strong> when detecting overload or underutilization</li>
+                    <li><strong>Negotiates resource trades</strong> between departments via automated Slack conversations</li>
+                    <li><strong>Schedules meetings intelligently</strong> considering energy levels, time zones, and focus time</li>
+                    <li><strong>Generates staffing recommendations</strong> with ROI calculations for each hire</li>
+                    <li><strong>Monitors burnout signals</strong> and suggests interventions before productivity drops</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 43% improvement in resource utilization, 31% reduction in project delays</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">📈 Autonomous Business Intelligence &amp; Reporting</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Throughout the day, Tribble's intelligence layer:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Monitors 200+ KPIs</strong> across all departments and systems in real-time</li>
+                    <li><strong>Detects anomalies</strong> and traces root causes across interconnected systems</li>
+                    <li><strong>Predicts metric trajectories</strong> using ML models trained on your historical data</li>
+                    <li><strong>Generates executive dashboards</strong> highlighting what matters most right now</li>
+                    <li><strong>Creates narrative reports</strong> explaining the 'why' behind every trend</li>
+                    <li><strong>Simulates intervention scenarios</strong> showing impact of potential decisions</li>
+                    <li><strong>Alerts stakeholders proactively</strong> with context and recommended actions</li>
+                    <li><strong>Schedules deep-dives automatically</strong> when metrics deviate from plans</li>
+                    <li><strong>Learns from decisions</strong> to improve future predictions and recommendations</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 80% reduction in reporting time, 5x faster decision-making</p>
+            </div>
+            
+            <div style="background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px;">
+                <h4 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.2rem;">🔄 Process Mining &amp; Optimization Engine</h4>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">Every week, Tribble's process intelligence:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Maps actual workflows</strong> by analyzing system logs, emails, and chat messages</li>
+                    <li><strong>Identifies process variants</strong> and measures efficiency of each path</li>
+                    <li><strong>Discovers shadow IT and workarounds</strong> that indicate broken processes</li>
+                    <li><strong>Calculates automation potential</strong> for every manual step with ROI projections</li>
+                    <li><strong>Designs optimized workflows</strong> reducing handoffs and wait times</li>
+                    <li><strong>Simulates changes</strong> before implementation to predict impact</li>
+                    <li><strong>Implements improvements gradually</strong> with automatic rollback if metrics decline</li>
+                    <li><strong>Trains employees automatically</strong> on new processes via contextual guidance</li>
+                    <li><strong>Measures adoption and iterates</strong> based on actual usage patterns</li>
+                </ol>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">Result: 52% reduction in process cycle time, $2.8M annual savings</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ROI Metrics Strip -->
+    <div class="roi-strip" id="roi-strip" style="opacity: 0; transition: opacity 0.5s;">
+        <div class="roi-item">
+            <div class="roi-number">90%</div>
+            <div class="roi-label">Reduction in RFP Time</div>
+        </div>
+        <div class="roi-item">
+            <div class="roi-number">351K</div>
+            <div class="roi-label">Hours Saved Annually</div>
+        </div>
+        <div class="roi-item">
+            <div class="roi-number">5,600</div>
+            <div class="roi-label">Questions/Month</div>
+        </div>
+        <div class="roi-item">
+            <div class="roi-number">88%</div>
+            <div class="roi-label">Autonomous Resolution</div>
+        </div>
+    </div>
+    
+    <!-- Testimonial Card -->
+    <div class="testimonial-card" id="testimonial-card" style="opacity: 0;">
+        <p class="testimonial-quote">
+            "After only two months of using Tribble, we achieved an additional headcount's worth of productivity on our RFP team. The platform has fundamentally changed how we scale expertise."
+        </p>
+        <div class="testimonial-author">
+            <div class="author-avatar">JD</div>
+            <div class="author-info">
+                <div class="author-name">Jane Doe</div>
+                <div class="author-title">VP Sales Operations, Sprout Social</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CTA Section -->
+    <div class="cta-section" id="cta-section" style="opacity: 0;">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Activate Enterprise Intelligence?</h2>
+            <p class="cta-subtitle">Join 300+ companies transforming into learning organizations with collective genius</p>
+            <div class="cta-buttons">
+                <a href="#demo" class="btn-large btn-primary">
+                    Book Your Demo
+                    <span>→</span>
+                </a>
+                <a href="#trial" class="btn-large btn-secondary">
+                    Start Free Trial
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Prompt -->
+    <div class="scroll-prompt" id="scroll-prompt">
+        <div class="scroll-text">Explore the Platform</div>
+        <div class="scroll-arrow"></div>
+    </div>
+    
+    <!-- HUD Overlay -->
+    <div class="hud-overlay">
+        <div class="tech-grid"></div>
+        
+        <!-- HUD Corners -->
+        <div class="hud-corner top-left" style="opacity: 0.8; transform: scale(1);"></div>
+        <div class="hud-corner top-right" style="opacity: 0.8; transform: scale(1);"></div>
+        <div class="hud-corner bottom-left" style="opacity: 0.8; transform: scale(1);"></div>
+        <div class="hud-corner bottom-right" style="opacity: 0.8; transform: scale(1);"></div>
+        
+        <!-- Scanning lines -->
+        <div class="scan-line" id="scan1" style="top: 20%; opacity: 0; transform: translateY(-25.2833px);"></div>
+        <div class="scan-line" id="scan2" style="top: 50%; opacity: 0; transform: translateY(-41.95px);"></div>
+        <div class="scan-line" id="scan3" style="top: 80%; opacity: 0; transform: translateY(-50px);"></div>
+        
+        <!-- Scene info -->
+        <div class="scene-info" id="scene-info" style="opacity: 1; transform: translateX(0px);">
+            <h1 class="scene-title" id="scene-title">DISTRIBUTED INTELLIGENCE</h1>
+            <p class="scene-subtitle" id="scene-subtitle">Your Organization Thinking as One</p>
+        </div>
+        
+        <!-- Data readouts -->
+        <div class="data-readout" id="readout1" style="top: 150px; left: 60px; opacity: 1;">
+            <div class="data-label">ACTIVE AGENTS</div>
+            <div class="data-value" id="cores-value">127</div>
+        </div>
+        
+        <div class="data-readout" id="readout2" style="top: 220px; left: 60px; opacity: 1;">
+            <div class="data-label">WORKFLOW EFFICIENCY</div>
+            <div class="data-value" id="density-value">98.70%</div>
+        </div>
+        
+        <div class="data-readout" id="readout3" style="bottom: 150px; left: 60px; opacity: 1;">
+            <div class="data-label">TASKS/SEC</div>
+            <div class="data-value" id="production-value">47</div>
+        </div>
+        
+        <!-- Analysis panel -->
+        <div class="analysis-panel" id="analysis-panel" style="opacity: 0;">
+            <div class="analysis-title">PLATFORM METRICS</div>
+            <div class="analysis-item">
+                <div class="data-label">AGENT RELIABILITY</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="integrity-progress" style="width: 92%;"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">API RESPONSE TIME</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="efficiency-progress" style="width: 88%;"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">MODEL ACCURACY</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sync-progress" style="width: 95%;"></div>
+                </div>
+            </div>
+            <div class="analysis-item">
+                <div class="data-label">SYSTEM UPTIME</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="thermal-progress" style="width: 99.9%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Particle field -->
+        <div class="particle-field" id="particle-field" style="opacity: 0;"><div class="particle" style="left: 52.0239%; top: 74.7579%; --drift-x: 17.272250012638146px; --drift-y: -0.6718316721807671px; animation-delay: 10.7927s; opacity: 0.416816;"></div><div class="particle" style="left: 55.0425%; top: 39.1946%; --drift-x: -55.91011486786732px; --drift-y: 61.8867057430011px; animation-delay: 12.7706s; opacity: 0.148804;"></div><div class="particle" style="left: 55.7982%; top: 69.0733%; --drift-x: 49.95678681509472px; --drift-y: 21.405376891262872px; animation-delay: 10.0514s; opacity: 0.401457;"></div><div class="particle" style="left: 60.1617%; top: 4.13819%; --drift-x: -15.415382676492651px; --drift-y: 10.388277058011642px; animation-delay: 0.0518022s; opacity: 0.365075;"></div><div class="particle" style="left: 77.5348%; top: 60.9968%; --drift-x: 45.27249072307591px; --drift-y: -27.55597890995256px; animation-delay: 6.57221s; opacity: 0.576346;"></div><div class="particle" style="left: 72.8019%; top: 42.5063%; --drift-x: -45.423613178575906px; --drift-y: -66.15543343601482px; animation-delay: 0.108591s; opacity: 0.300529;"></div><div class="particle" style="left: 1.34265%; top: 96.1641%; --drift-x: 14.669714079098718px; --drift-y: -72.17659284732893px; animation-delay: 2.8349s; opacity: 0.331293;"></div><div class="particle" style="left: 3.82276%; top: 63.7621%; --drift-x: -44.676567974096784px; --drift-y: 70.84162824555598px; animation-delay: 13.4215s; opacity: 0.151183;"></div><div class="particle" style="left: 73.0209%; top: 83.8368%; --drift-x: -19.964312574452258px; --drift-y: 0.3750131086892594px; animation-delay: 5.1686s; opacity: 0.26937;"></div><div class="particle" style="left: 44.738%; top: 98.768%; --drift-x: 65.86485747873627px; --drift-y: -51.94003385754926px; animation-delay: 0.812843s; opacity: 0.468685;"></div><div class="particle" style="left: 21.6516%; top: 84.7459%; --drift-x: -26.167829230076922px; --drift-y: 35.291389689610185px; animation-delay: 5.39206s; opacity: 0.231196;"></div><div class="particle" style="left: 44.9517%; top: 10.383%; --drift-x: 50.56742813859372px; --drift-y: 37.99861469832238px; animation-delay: 9.07334s; opacity: 0.0243182;"></div><div class="particle" style="left: 3.09333%; top: 16.0138%; --drift-x: -65.93773322659769px; --drift-y: -38.40281239266208px; animation-delay: 3.38089s; opacity: 0.239467;"></div><div class="particle" style="left: 26.562%; top: 24.6521%; --drift-x: -1.875591140207522px; --drift-y: -11.059255584639448px; animation-delay: 2.39491s; opacity: 0.255835;"></div><div class="particle" style="left: 45.0547%; top: 32.1853%; --drift-x: 24.248283936456993px; --drift-y: -25.99218898982043px; animation-delay: 8.3312s; opacity: 0.111646;"></div><div class="particle" style="left: 47.9257%; top: 30.0078%; --drift-x: -60.53471519751288px; --drift-y: 86.25375183384595px; animation-delay: 2.9983s; opacity: 0.106005;"></div><div class="particle" style="left: 28.8955%; top: 68.5448%; --drift-x: 96.35498801525331px; --drift-y: 70.01754173091486px; animation-delay: 8.038s; opacity: 0.450626;"></div><div class="particle" style="left: 94.1891%; top: 96.9393%; --drift-x: 1.8092523697323948px; --drift-y: -52.29923059657568px; animation-delay: 13.4214s; opacity: 0.365995;"></div><div class="particle" style="left: 0.52436%; top: 17.1897%; --drift-x: 77.08434611418322px; --drift-y: -11.101418791169348px; animation-delay: 2.18839s; opacity: 0.463864;"></div><div class="particle" style="left: 53.0183%; top: 21.8725%; --drift-x: -75.04673751946977px; --drift-y: -52.04205313484691px; animation-delay: 13.5421s; opacity: 0.25895;"></div><div class="particle" style="left: 9.15107%; top: 59.2141%; --drift-x: 94.60307303102735px; --drift-y: -13.711666972138925px; animation-delay: 2.83236s; opacity: 0.195199;"></div><div class="particle" style="left: 40.245%; top: 75.2973%; --drift-x: -77.39233308827282px; --drift-y: -81.79550203214316px; animation-delay: 6.35737s; opacity: 0.221336;"></div><div class="particle" style="left: 12.7879%; top: 46.5633%; --drift-x: 6.862398914950507px; --drift-y: 2.9146310176578982px; animation-delay: 13.1645s; opacity: 0.248058;"></div><div class="particle" style="left: 46.1686%; top: 62.57%; --drift-x: 32.735097406116644px; --drift-y: -21.774496331790406px; animation-delay: 13.9902s; opacity: 0.228037;"></div><div class="particle" style="left: 88.5249%; top: 33.0818%; --drift-x: 33.62026486132989px; --drift-y: -75.14791782312838px; animation-delay: 2.59367s; opacity: 0.0795917;"></div><div class="particle" style="left: 38.1906%; top: 43.4999%; --drift-x: 56.99123799946102px; --drift-y: -81.26543310195682px; animation-delay: 4.51407s; opacity: 0.384984;"></div><div class="particle" style="left: 98.2598%; top: 68.9831%; --drift-x: 94.703667067775px; --drift-y: -5.722780428072549px; animation-delay: 8.19377s; opacity: 0.0234266;"></div><div class="particle" style="left: 4.8954%; top: 14.6906%; --drift-x: 95.17888583058107px; --drift-y: -31.82855741557813px; animation-delay: 8.10243s; opacity: 0.388608;"></div><div class="particle" style="left: 82.8065%; top: 12.0476%; --drift-x: -53.07133335358238px; --drift-y: 89.28999458895814px; animation-delay: 4.14638s; opacity: 0.325251;"></div><div class="particle" style="left: 60.5393%; top: 35.6114%; --drift-x: 40.77585841305644px; --drift-y: -13.939273245616079px; animation-delay: 1.78349s; opacity: 0.03451;"></div></div>
+    </div>
+    
+    <!-- Canvas container for 3D scene -->
+    <div id="canvas-container"><canvas data-engine="three.js r157" width="3054" height="2396" style="display: block; width: 1527px; height: 1198px;"></canvas></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf8fafc);
+        
+        // Camera
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 4000);
+        camera.position.set(0, 1000, 2000);
+        
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true, 
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0x3b82f6, 0.8);
+        directionalLight.position.set(100, 200, 100);
+        scene.add(directionalLight);
+        
+        const rimLight = new THREE.DirectionalLight(0x60a5fa, 0.4);
+        rimLight.position.set(-100, 100, -100);
+        scene.add(rimLight);
+        
+        // Model loader
+        const gltfLoader = new GLTFLoader();
+        
+        // Component storage
+        let mainFactory = null;
+        
+        // Enhanced wireframe conversion
+        function convertToWireframe(object, color = 0x1e40af, lineOpacity = 1.0) {
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    const wireframeGeometry = new THREE.WireframeGeometry(child.geometry);
+                    const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                        color: color,
+                        linewidth: 2,
+                        transparent: true,
+                        opacity: lineOpacity
+                    });
+                    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                    child.add(wireframe);
+                    child.userData.wireframe = wireframe;
+                    child.userData.wireframeMaterial = wireframeMaterial;
+                    
+                    child.material = new THREE.MeshBasicMaterial({ 
+                        color: 0xf0f9ff,
+                        transparent: true,
+                        opacity: 0.02,
+                        side: THREE.DoubleSide
+                    });
+                }
+            });
+        }
+        
+        // Scene configurations - properly spaced journey
+        const scenes = [
+            { 
+                name: 'DISTRIBUTED INTELLIGENCE',
+                subtitle: 'Your Organization Thinking as One',
+                camera: { x: 300, y: 600, z: 800 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0.2, z: 0 },
+                hudElements: ['readout1', 'readout2', 'readout3'],
+                showElements: ['capabilities-strip']
+            },
+            { 
+                name: 'COLLECTIVE MEMORY',
+                subtitle: 'Every Insight Captured, Forever',
+                camera: { x: -300, y: 400, z: 500 },
+                target: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: -0.3, z: 0 },
+                hudElements: ['analysis-panel'],
+                showElements: ['org-memory-card']
+            },
+            { 
+                name: 'INTELLIGENCE AT WORK',
+                subtitle: 'Every Department Operating at Genius Level',
+                camera: { x: 200, y: 350, z: 400 },
+                target: { x: 0, y: 30, z: 0 },
+                rotation: { x: 0, y: 0.5, z: 0 },
+                hudElements: [],
+                showElements: ['use-cases']
+            },
+            { 
+                name: 'THE INTELLIGENCE ADVANTAGE',
+                subtitle: 'Measurable Genius, Proven Results',
+                camera: { x: 250, y: 300, z: 350 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 1.2, z: 0 },
+                hudElements: [],
+                showElements: ['roi-strip', 'testimonials-carousel']
+            },
+            { 
+                name: 'AUTONOMOUS OPERATIONS',
+                subtitle: 'Intelligence That Acts Without Asking',
+                camera: { x: -250, y: 250, z: 300 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 1.8, z: 0 },
+                hudElements: ['readout1', 'readout2', 'readout3'],
+                showElements: ['workflow-content']
+            },
+            { 
+                name: 'UNIFIED INTELLIGENCE',
+                subtitle: 'Every System Thinking Together',
+                camera: { x: 150, y: 300, z: 250 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 2.4, z: 0 },
+                hudElements: [],
+                showElements: ['integration-showcase']
+            },
+            { 
+                name: 'ACTIVATE YOUR INTELLIGENCE',
+                subtitle: 'Transform Into a Learning Organization',
+                camera: { x: 200, y: 350, z: 350 },
+                target: { x: 0, y: 50, z: 0 },
+                rotation: { x: 0, y: 3.5, z: 0 },
+                hudElements: [],
+                showElements: ['cta-section']
+            }
+        ];
+        
+        let currentScene = 0;
+        
+        // Load main factory model
+        async function loadModels() {
+            try {
+                const gltf = await gltfLoader.loadAsync('./models/mega_factory.glb');
+                mainFactory = gltf.scene;
+                mainFactory.scale.set(2, 2, 2);
+                convertToWireframe(mainFactory, 0x1e40af, 0.3);
+                scene.add(mainFactory);
+                
+                // Add microchip grid
+                try {
+                    const chipGltf = await gltfLoader.loadAsync('./models/microchip_prototype.glb');
+                    
+                    const chipGrid = new THREE.Group();
+                    const connectionGroup = new THREE.Group();
+                    const rows = 3;
+                    const cols = 3;
+                    const layers = 3;
+                    const spacing = 40;
+                    
+                    const chipPositions = [];
+                    
+                    for (let layer = 0; layer < layers; layer++) {
+                        for (let row = 0; row < rows; row++) {
+                            for (let col = 0; col < cols; col++) {
+                                const chip = chipGltf.scene.clone();
+                                chip.scale.set(10, 10, 10);
+                                
+                                convertToWireframe(chip, 0x00ffff, 0.8);
+                                
+                                const x = (col - cols / 2 + 0.5) * spacing;
+                                const z = (row - rows / 2 + 0.5) * spacing;
+                                const y = 40 + (layer * spacing);
+                                
+                                chip.position.set(x, y, z);
+                                chipPositions.push({x, y, z});
+                                
+                                chip.rotation.y = Math.PI / 4;
+                                
+                                chipGrid.add(chip);
+                            }
+                        }
+                    }
+                    
+                    // Create neural network connections
+                    const connectionMaterial = new THREE.LineBasicMaterial({
+                        color: 0x00ffff,
+                        transparent: true,
+                        opacity: 0.3,
+                        linewidth: 1
+                    });
+                    
+                    for (let i = 0; i < chipPositions.length; i++) {
+                        for (let j = i + 1; j < chipPositions.length; j++) {
+                            const dist = Math.sqrt(
+                                Math.pow(chipPositions[i].x - chipPositions[j].x, 2) +
+                                Math.pow(chipPositions[i].y - chipPositions[j].y, 2) +
+                                Math.pow(chipPositions[i].z - chipPositions[j].z, 2)
+                            );
+                            
+                            if (dist < spacing * 1.5) {
+                                const geometry = new THREE.BufferGeometry().setFromPoints([
+                                    new THREE.Vector3(chipPositions[i].x, chipPositions[i].y, chipPositions[i].z),
+                                    new THREE.Vector3(chipPositions[j].x, chipPositions[j].y, chipPositions[j].z)
+                                ]);
+                                const line = new THREE.Line(geometry, connectionMaterial);
+                                connectionGroup.add(line);
+                            }
+                        }
+                    }
+                    
+                    chipGrid.add(connectionGroup);
+                    chipGrid.userData.rotationSpeed = 0.001;
+                    chipGrid.userData.connectionGroup = connectionGroup;
+                    mainFactory.add(chipGrid);
+                    mainFactory.userData.chipGrid = chipGrid;
+                    
+                } catch (e) {
+                    console.log('Microchip grid not added:', e);
+                }
+                
+            } catch (error) {
+                console.log('Creating fallback factory');
+                
+                // Create complex fallback factory
+                const factoryGroup = new THREE.Group();
+                
+                // Main building
+                const mainGeometry = new THREE.BoxGeometry(100, 50, 120);
+                const mainMesh = new THREE.Mesh(mainGeometry);
+                convertToWireframe(mainMesh, 0x1e40af, 0.3);
+                factoryGroup.add(mainMesh);
+                
+                // Central dome
+                const domeGeometry = new THREE.SphereGeometry(30, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+                const domeMesh = new THREE.Mesh(domeGeometry);
+                convertToWireframe(domeMesh, 0x00bfff, 0.3);
+                domeMesh.position.y = 25;
+                factoryGroup.add(domeMesh);
+                
+                // Towers
+                for (let i = 0; i < 4; i++) {
+                    const towerGeometry = new THREE.CylinderGeometry(8, 10, 80, 8);
+                    const towerMesh = new THREE.Mesh(towerGeometry);
+                    convertToWireframe(towerMesh, 0x3b82f6, 0.3);
+                    const angle = (i / 4) * Math.PI * 2;
+                    towerMesh.position.x = Math.cos(angle) * 60;
+                    towerMesh.position.z = Math.sin(angle) * 60;
+                    towerMesh.position.y = 40;
+                    factoryGroup.add(towerMesh);
+                }
+                
+                mainFactory = factoryGroup;
+                scene.add(mainFactory);
+            }
+        }
+        
+        // Initialize HUD animations
+        function initHUD() {
+            // Animate corners
+            anime({
+                targets: '.hud-corner',
+                opacity: [0, 0.8],
+                scale: [0.8, 1],
+                duration: 1000,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuad'
+            });
+            
+            // Scanning lines animation
+            anime({
+                targets: '.scan-line',
+                opacity: [0, 0.6, 0],
+                translateY: [-50, 50],
+                duration: 3000,
+                delay: anime.stagger(500),
+                loop: true,
+                easing: 'linear'
+            });
+            
+            // Scene info fade in
+            anime({
+                targets: '#scene-info',
+                opacity: [0, 1],
+                translateX: [-20, 0],
+                duration: 800,
+                delay: 500,
+                easing: 'easeOutQuad'
+            });
+            
+            // Animated counters
+            animateCounter('cores-value', 0, 127, 2000);
+            animateCounter('density-value', 0, 98.7, 2500, true, '%');
+            animateCounter('production-value', 0, 47, 3000);
+            
+            // Create particle field
+            createParticleField();
+        }
+        
+        // Create particle field
+        function createParticleField() {
+            const particleContainer = document.getElementById('particle-field');
+            
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 200}px`);
+                particle.style.setProperty('--drift-y', `${(Math.random() - 0.5) * 200}px`);
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                particle.style.opacity = Math.random() * 0.6;
+                particleContainer.appendChild(particle);
+            }
+        }
+        
+        // Animate number counters
+        function animateCounter(id, start, end, duration, isFloat = false, suffix = '') {
+            const element = document.getElementById(id);
+            if (!element) return;
+            
+            const obj = { value: start };
+            
+            anime({
+                targets: obj,
+                value: end,
+                duration: duration,
+                easing: 'easeOutQuad',
+                update: function() {
+                    if (isFloat) {
+                        element.textContent = obj.value.toFixed(2) + suffix;
+                    } else {
+                        element.textContent = Math.floor(obj.value) + suffix;
+                    }
+                }
+            });
+        }
+        
+        // Update HUD for scene changes
+        function updateHUD(sceneIndex) {
+            const scene = scenes[sceneIndex];
+            
+            // Update title
+            document.getElementById('scene-title').textContent = scene.name;
+            document.getElementById('scene-subtitle').textContent = scene.subtitle;
+            
+            // Nav bar never shows during scroll journey
+            const navBar = document.getElementById('nav-bar');
+            navBar.classList.add('hidden');
+            navBar.classList.remove('visible');
+            
+            // Hide all HUD elements
+            const allHudElements = ['readout1', 'readout2', 'readout3', 'analysis-panel', 'particle-field'];
+            allHudElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    anime({
+                        targets: `#${id}`,
+                        opacity: 0,
+                        duration: 200
+                    });
+                }
+            });
+            
+            // Show scene-specific HUD elements
+            scene.hudElements.forEach((id, index) => {
+                anime({
+                    targets: `#${id}`,
+                    opacity: 1,
+                    duration: 500,
+                    delay: index * 100,
+                    easing: 'easeOutQuad'
+                });
+            });
+            
+            // Hide all content elements immediately
+            const allShowElements = ['nav-bar', 'capabilities-strip', 'use-cases', 'roi-strip', 'testimonial-card', 
+                                     'cta-section', 'org-memory-card', 'workflow-content', 'integration-showcase', 'testimonials-carousel', 'trust-strip'];
+            
+            // Force hide all elements to prevent overlap
+            allShowElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.remove('visible');
+                    // Special handling for capabilities-strip to ensure it's fully hidden
+                    if (id === 'capabilities-strip') {
+                        element.style.display = 'none !important';
+                        element.style.opacity = '0 !important';
+                    } else {
+                        element.style.opacity = '0';
+                    }
+                }
+            });
+            
+            // Show scene-specific content elements with proper timing
+            if (scene.showElements) {
+                // Clear any existing timeouts
+                if (window.contentTimeouts) {
+                    window.contentTimeouts.forEach(timeout => clearTimeout(timeout));
+                }
+                window.contentTimeouts = [];
+                
+                scene.showElements.forEach((id, index) => {
+                    const timeout = setTimeout(() => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            // Special handling for capabilities-strip
+                            if (id === 'capabilities-strip') {
+                                element.style.display = 'grid !important';
+                                element.style.opacity = '1 !important';
+                            } else {
+                                element.style.opacity = '1';
+                            }
+                            element.style.transition = 'opacity 0.5s ease';
+                            element.classList.add('visible');
+                        }
+                    }, 600 + (index * 100));
+                    window.contentTimeouts.push(timeout);
+                });
+            }
+            
+            // Update progress bars
+            if (scene.hudElements.includes('analysis-panel')) {
+                anime({
+                    targets: '#integrity-progress',
+                    width: '92%',
+                    duration: 1000,
+                    delay: 300,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#efficiency-progress',
+                    width: '88%',
+                    duration: 1000,
+                    delay: 400,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#sync-progress',
+                    width: '95%',
+                    duration: 1000,
+                    delay: 500,
+                    easing: 'easeOutQuad'
+                });
+                anime({
+                    targets: '#thermal-progress',
+                    width: '99.9%',
+                    duration: 1000,
+                    delay: 600,
+                    easing: 'easeOutQuad'
+                });
+            }
+        }
+        
+        // Smooth scroll system
+        let targetScrollY = 0;
+        let currentScrollY = 0;
+        let scrollVelocity = 0;
+        
+        function handleScroll() {
+            targetScrollY = window.scrollY;
+            
+            // Hide hero content after initial scroll
+            if (targetScrollY > 50) {
+                document.getElementById('hero-content').classList.add('hidden');
+                document.getElementById('scroll-prompt').classList.add('hidden');
+            } else {
+                document.getElementById('hero-content').classList.remove('hidden');
+                document.getElementById('scroll-prompt').classList.remove('hidden');
+            }
+        }
+        
+        // Adjust wireframe opacity based on scene
+        function adjustWireframeOpacity(targetOpacity) {
+            if (mainFactory) {
+                mainFactory.traverse((child) => {
+                    if (child.userData.wireframeMaterial) {
+                        anime({
+                            targets: child.userData.wireframeMaterial,
+                            opacity: targetOpacity,
+                            duration: 800,
+                            easing: 'easeInOutQuad'
+                        });
+                    }
+                });
+            }
+        }
+        
+        function updateCamera() {
+            // Smooth scroll interpolation
+            const scrollDelta = targetScrollY - currentScrollY;
+            scrollVelocity += scrollDelta * 0.015;
+            scrollVelocity *= 0.88;
+            currentScrollY += scrollVelocity;
+            
+            // Fix max scroll calculation to prevent jumping
+            const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
+            const scrollProgress = Math.max(0, Math.min(0.99, currentScrollY / maxScroll));
+            
+            // Prevent jumping at the end
+            const totalScenes = scenes.length;
+            const sceneFloat = Math.min(scrollProgress * (totalScenes - 1), totalScenes - 1.01);
+            const sceneIndex = Math.min(Math.floor(sceneFloat), totalScenes - 1);
+            const sceneProgress = sceneFloat - sceneIndex;
+            
+            // Update scene if changed with debouncing
+            if (sceneIndex !== currentScene && Math.abs(sceneFloat - currentScene) > 0.25) {
+                currentScene = sceneIndex;
+                updateHUD(currentScene);
+                
+                // Adjust wireframe opacity
+                if (currentScene === 0) {
+                    adjustWireframeOpacity(0.3);
+                } else if (currentScene < 3) {
+                    adjustWireframeOpacity(0.5);
+                } else {
+                    adjustWireframeOpacity(0.7);
+                }
+            }
+            
+            const scene1 = scenes[Math.min(sceneIndex, scenes.length - 1)];
+            const scene2 = scenes[Math.min(sceneIndex + 1, scenes.length - 1)];
+            
+            // Smooth easing
+            const easedProgress = sceneProgress < 0.5 
+                ? 2 * sceneProgress * sceneProgress 
+                : 1 - Math.pow(-2 * sceneProgress + 2, 2) / 2;
+            
+            // Interpolate camera position
+            const targetCameraX = scene1.camera.x + (scene2.camera.x - scene1.camera.x) * easedProgress;
+            const targetCameraY = scene1.camera.y + (scene2.camera.y - scene1.camera.y) * easedProgress;
+            const targetCameraZ = scene1.camera.z + (scene2.camera.z - scene1.camera.z) * easedProgress;
+            
+            camera.position.x += (targetCameraX - camera.position.x) * 0.08;
+            camera.position.y += (targetCameraY - camera.position.y) * 0.08;
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.08;
+            
+            // Interpolate look-at target
+            const targetLookX = scene1.target.x + (scene2.target.x - scene1.target.x) * easedProgress;
+            const targetLookY = scene1.target.y + (scene2.target.y - scene1.target.y) * easedProgress;
+            const targetLookZ = scene1.target.z + (scene2.target.z - scene1.target.z) * easedProgress;
+            
+            camera.lookAt(targetLookX, targetLookY, targetLookZ);
+            
+            // Update model rotation
+            if (mainFactory) {
+                const targetRotX = scene1.rotation.x + (scene2.rotation.x - scene1.rotation.x) * easedProgress;
+                const targetRotY = scene1.rotation.y + (scene2.rotation.y - scene1.rotation.y) * easedProgress;
+                const targetRotZ = scene1.rotation.z + (scene2.rotation.z - scene1.rotation.z) * easedProgress;
+                
+                mainFactory.rotation.x += (targetRotX - mainFactory.rotation.x) * 0.05;
+                mainFactory.rotation.y += (targetRotY - mainFactory.rotation.y) * 0.05;
+                mainFactory.rotation.z += (targetRotZ - mainFactory.rotation.z) * 0.05;
+            }
+        }
+        
+        // Animation loop
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+            
+            updateCamera();
+            
+            // Subtle idle animation
+            if (mainFactory) {
+                mainFactory.position.y = Math.sin(elapsedTime * 0.5) * 2;
+                
+                // Rotate the chip grid
+                if (mainFactory.userData.chipGrid) {
+                    mainFactory.userData.chipGrid.rotation.y += mainFactory.userData.chipGrid.userData.rotationSpeed;
+                    
+                    // Add floating animation to chips
+                    mainFactory.userData.chipGrid.children.forEach((child, index) => {
+                        if (child.isMesh || child.type === 'Group') {
+                            const offset = index * 0.1;
+                            child.position.y = child.userData.baseY || child.position.y;
+                            if (!child.userData.baseY) child.userData.baseY = child.position.y;
+                            child.position.y = child.userData.baseY + Math.sin(elapsedTime * 0.8 + offset) * 1.5;
+                        }
+                    });
+                    
+                    // Pulse neural connections
+                    const connectionGroup = mainFactory.userData.chipGrid.userData.connectionGroup;
+                    if (connectionGroup) {
+                        connectionGroup.children.forEach((line, index) => {
+                            if (line.material) {
+                                const pulse = 0.3 + Math.sin(elapsedTime * 2 + index * 0.2) * 0.3;
+                                line.material.opacity = pulse;
+                            }
+                        });
+                    }
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Setup use case tabs
+        function setupUseCaseTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.use-case-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    contents.forEach(content => {
+                        if (content.dataset.content === targetTab) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Event listeners
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize
+        async function init() {
+            await loadModels();
+            
+            // Hide loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            anime({
+                targets: loadingScreen,
+                opacity: 0,
+                duration: 500,
+                easing: 'easeOutQuad',
+                complete: () => {
+                    loadingScreen.style.display = 'none';
+                }
+            });
+            
+            initHUD();
+            setupUseCaseTabs();
+            animate();
+            
+            // Don't show any scene content initially
+            currentScene = -1;
+        }
+        
+        init();
+    </script>
+
+<browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container></body></html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tribble - The Enterprise Intelligence Platform | Transform Operations Into Intelligence</title>
+    <link rel="icon" type="image/svg+xml" href="title-icon.svg">
     <style>
         * { 
             margin: 0; 
@@ -14,7 +15,7 @@
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: #f8fafc;
-            color: #1e293b;
+            color: #00091A;
             overflow-x: hidden;
             height: 1600vh;
         }
@@ -41,7 +42,7 @@
         /* HUD Frame Elements */
         .hud-frame {
             position: absolute;
-            border: 2px solid #3b82f6;
+            border: 2px solid #3263E9;
             opacity: 0.8;
         }
         
@@ -49,7 +50,7 @@
             position: absolute;
             width: 40px;
             height: 40px;
-            border: 2px solid #3b82f6;
+            border: 2px solid #3263E9;
         }
         
         .hud-corner.top-left {
@@ -85,7 +86,7 @@
             position: absolute;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            background: linear-gradient(90deg, transparent, #5B7FEA, transparent);
             opacity: 0;
         }
         
@@ -93,17 +94,17 @@
         .data-readout {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #3b82f6;
+            border: 1px solid #3263E9;
             padding: 8px 12px;
             font-size: 11px;
             font-family: 'Monaco', 'Courier New', monospace;
-            color: #1e40af;
+            color: #3263E9;
             opacity: 0;
             backdrop-filter: blur(10px);
         }
         
         .data-label {
-            color: #64748b;
+            color: #6B7280;
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -112,7 +113,7 @@
         .data-value {
             font-size: 14px;
             font-weight: bold;
-            color: #1e40af;
+            color: #3263E9;
             margin-top: 2px;
         }
         
@@ -128,7 +129,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px solid #60a5fa;
+            border: 2px solid #5B7FEA;
             border-radius: 50%;
         }
         
@@ -141,7 +142,7 @@
         
         .reticle-line {
             position: absolute;
-            background: #60a5fa;
+            background: #5B7FEA;
         }
         
         .reticle-line.horizontal {
@@ -164,8 +165,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+                linear-gradient(rgba(50, 99, 233, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(50, 99, 233, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
             opacity: 0.5;
         }
@@ -178,7 +179,7 @@
             transform: translateY(-50%);
             width: 250px;
             background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #3b82f6;
+            border: 2px solid #3263E9;
             padding: 20px;
             backdrop-filter: blur(20px);
             opacity: 0;
@@ -187,7 +188,7 @@
         .analysis-title {
             font-size: 12px;
             font-weight: 700;
-            color: #1e40af;
+            color: #3263E9;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
@@ -196,7 +197,7 @@
         .analysis-item {
             margin-bottom: 12px;
             padding-bottom: 12px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            border-bottom: 1px solid rgba(50, 99, 233, 0.2);
         }
         
         .analysis-item:last-child {
@@ -206,7 +207,7 @@
         .progress-bar {
             width: 100%;
             height: 4px;
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(50, 99, 233, 0.2);
             border-radius: 2px;
             overflow: hidden;
             margin-top: 5px;
@@ -214,7 +215,7 @@
         
         .progress-fill {
             height: 100%;
-            background: #3b82f6;
+            background: #3263E9;
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -237,7 +238,7 @@
         
         .loading-text {
             margin-top: 20px;
-            color: #3b82f6;
+            color: #3263E9;
             font-size: 14px;
             font-weight: 600;
             letter-spacing: 2px;
@@ -264,31 +265,32 @@
         .hero-logo {
             font-size: 4rem;
             font-weight: 900;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 1rem;
             letter-spacing: -2px;
         }
         
         .hero-tagline {
             font-size: 1.8rem;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 0.5rem;
             font-weight: 600;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
         .hero-subtitle {
             font-size: 1.2rem;
-            color: #64748b;
+            color: #6B7280;
             margin-bottom: 2rem;
             font-weight: 300;
         }
         
         .hero-cta {
             display: inline-block;
-            background: #3b82f6;
+            background: #3263E9;
             color: white;
             padding: 1rem 2.5rem;
             border-radius: 8px;
@@ -300,19 +302,19 @@
         }
         
         .hero-cta:hover {
-            background: #2563eb;
+            background: #2B57D8;
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(50, 99, 233, 0.3);
         }
         
         .hero-cta.secondary {
             background: transparent;
-            border: 2px solid #3b82f6;
-            color: #3b82f6;
+            border: 2px solid #3263E9;
+            color: #3263E9;
         }
         
         .hero-cta.secondary:hover {
-            background: #3b82f6;
+            background: #3263E9;
             color: white;
         }
         
@@ -340,7 +342,7 @@
             padding: 1.5rem;
             border-radius: 12px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(50, 99, 233, 0.2);
         }
         
         .feature-icon {
@@ -351,13 +353,13 @@
         .feature-title {
             font-size: 1rem;
             font-weight: 700;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 0.3rem;
         }
         
         .feature-desc {
             font-size: 0.875rem;
-            color: #64748b;
+            color: #6B7280;
         }
         
         /* Scroll prompt */
@@ -378,7 +380,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             color: white;
             padding: 20px 48px;
             border-radius: 60px;
@@ -389,8 +391,8 @@
             z-index: 150;
             opacity: 0;
             transition: all 0.3s ease;
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4),
-                        0 0 100px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 20px 60px rgba(50, 99, 233, 0.4),
+                        0 0 100px rgba(50, 99, 233, 0.2);
             display: none;
             backdrop-filter: blur(10px);
             letter-spacing: 1px;
@@ -412,7 +414,7 @@
             transform: translate(-50%, -50%);
             width: 120%;
             height: 120%;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             border-radius: 60px;
             opacity: 0.3;
             filter: blur(20px);
@@ -427,19 +429,19 @@
         
         .view-details-btn:hover {
             transform: translate(-50%, -50%) scale(1.1);
-            box-shadow: 0 25px 80px rgba(59, 130, 246, 0.6),
-                        0 0 120px rgba(139, 92, 246, 0.4);
-            background: linear-gradient(135deg, #5558E3, #9F5FF6);
+            box-shadow: 0 25px 80px rgba(50, 99, 233, 0.6),
+                        0 0 120px rgba(91, 127, 234, 0.4);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
         }
         
         @keyframes pulseButton {
             0%, 100% { 
-                box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4),
-                            0 0 100px rgba(59, 130, 246, 0.2);
+                box-shadow: 0 20px 60px rgba(50, 99, 233, 0.4),
+                            0 0 100px rgba(50, 99, 233, 0.2);
             }
             50% { 
-                box-shadow: 0 20px 80px rgba(59, 130, 246, 0.6),
-                            0 0 150px rgba(59, 130, 246, 0.3);
+                box-shadow: 0 20px 80px rgba(50, 99, 233, 0.6),
+                            0 0 150px rgba(50, 99, 233, 0.3);
             }
         }
         
@@ -453,7 +455,7 @@
         }
         
         .scroll-text {
-            color: #64748b;
+            color: #6B7280;
             font-size: 0.875rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
@@ -463,8 +465,8 @@
         .scroll-arrow {
             width: 30px;
             height: 30px;
-            border-right: 2px solid #3b82f6;
-            border-bottom: 2px solid #3b82f6;
+            border-right: 2px solid #3263E9;
+            border-bottom: 2px solid #3263E9;
             transform: rotate(45deg);
             margin: 0 auto;
             animation: scrollBounce 2s ease-in-out infinite;
@@ -486,14 +488,14 @@
         .scene-title {
             font-size: 24px;
             font-weight: 800;
-            color: #1e40af;
+            color: #3263E9;
             letter-spacing: -0.5px;
             margin-bottom: 5px;
         }
         
         .scene-subtitle {
             font-size: 14px;
-            color: #64748b;
+            color: #6B7280;
             font-weight: 500;
         }
         
@@ -502,7 +504,7 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: #60a5fa;
+            background: #5B7FEA;
             border-radius: 50%;
             opacity: 0;
         }
@@ -512,7 +514,7 @@
             position: absolute;
             width: 12px;
             height: 12px;
-            border: 1px solid #60a5fa;
+            border: 1px solid #5B7FEA;
             border-radius: 50%;
             top: 50%;
             left: 50%;
@@ -532,7 +534,7 @@
             left: 60px;
             bottom: 60px;
             background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #3b82f6;
+            border: 1px solid #3263E9;
             padding: 10px 15px;
             font-family: 'Monaco', 'Courier New', monospace;
             opacity: 0;
@@ -540,7 +542,7 @@
         }
         
         .velocity-label {
-            color: #64748b;
+            color: #6B7280;
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -549,7 +551,7 @@
         .velocity-value {
             font-size: 18px;
             font-weight: bold;
-            color: #1e40af;
+            color: #3263E9;
             margin-top: 3px;
         }
         
@@ -564,7 +566,7 @@
         .connection-line {
             position: absolute;
             height: 1px;
-            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            background: linear-gradient(90deg, transparent, #5B7FEA, transparent);
             transform-origin: left center;
         }
         
@@ -577,7 +579,7 @@
             position: absolute;
             width: 30px;
             height: 30px;
-            border: 2px solid #60a5fa;
+            border: 2px solid #5B7FEA;
         }
         
         .bracket.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
@@ -600,16 +602,16 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px solid rgba(59, 130, 246, 0.3);
+            border: 2px solid rgba(50, 99, 233, 0.3);
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(50, 99, 233, 0.1) 0%, transparent 70%);
         }
         
         .radar-sweep {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: conic-gradient(from 0deg, transparent, rgba(96, 165, 250, 0.6), transparent 30deg);
+            background: conic-gradient(from 0deg, transparent, rgba(91, 127, 234, 0.6), transparent 30deg);
             border-radius: 50%;
             animation: radarSweep 3s linear infinite;
         }
@@ -623,9 +625,9 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: #60a5fa;
+            background: #5B7FEA;
             border-radius: 50%;
-            box-shadow: 0 0 10px #60a5fa;
+            box-shadow: 0 0 10px #5B7FEA;
             animation: radarPulse 2s ease-in-out infinite;
         }
         
@@ -651,7 +653,7 @@
         
         .wave-bar {
             flex: 1;
-            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            background: linear-gradient(to top, #3263E9, #5B7FEA);
             height: 20%;
             animation: waveform 1s ease-in-out infinite;
         }
@@ -675,7 +677,7 @@
         
         .crosshair-line {
             position: absolute;
-            background: rgba(96, 165, 250, 0.5);
+            background: rgba(91, 127, 234, 0.5);
         }
         
         .crosshair-h1 { top: 30%; left: 0; width: 30%; height: 1px; }
@@ -694,7 +696,7 @@
             transform: translate(-50%, -50%);
             width: 10px;
             height: 10px;
-            border: 2px solid #60a5fa;
+            border: 2px solid #5B7FEA;
             border-radius: 50%;
         }
         
@@ -711,7 +713,7 @@
             position: absolute;
             width: 2px;
             height: 2px;
-            background: #60a5fa;
+            background: #5B7FEA;
             border-radius: 50%;
             animation: particleDrift 15s linear infinite;
         }
@@ -754,7 +756,7 @@
         .content-left {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border: 2px solid rgba(59, 130, 246, 0.3);
+            border: 2px solid rgba(50, 99, 233, 0.3);
             border-radius: 20px;
             padding: 40px;
             height: fit-content;
@@ -762,7 +764,7 @@
         
         .content-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             color: white;
             padding: 6px 16px;
             border-radius: 20px;
@@ -776,14 +778,14 @@
         .content-title {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 20px;
             line-height: 1.1;
         }
         
         .content-subtitle {
             font-size: 1.25rem;
-            color: #64748b;
+            color: #6B7280;
             margin-bottom: 30px;
             line-height: 1.6;
         }
@@ -797,27 +799,27 @@
         
         .stat-item {
             padding: 15px;
-            background: rgba(59, 130, 246, 0.05);
+            background: rgba(50, 99, 233, 0.05);
             border-radius: 12px;
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid #3263E9;
         }
         
         .stat-value {
             font-size: 24px;
             font-weight: 700;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 4px;
         }
         
         .stat-label {
             font-size: 12px;
-            color: #64748b;
+            color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .content-cta {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             color: white;
             padding: 14px 28px;
             border-radius: 8px;
@@ -832,7 +834,7 @@
         
         .content-cta:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 30px rgba(50, 99, 233, 0.4);
         }
         
         .content-right {
@@ -851,7 +853,7 @@
         .use-case-card {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(50, 99, 233, 0.2);
             border-radius: 16px;
             padding: 25px;
             transition: all 0.3s ease;
@@ -860,8 +862,8 @@
         
         .use-case-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
+            box-shadow: 0 15px 30px rgba(50, 99, 233, 0.2);
+            border-color: #3263E9;
         }
         
         .use-case-icon {
@@ -872,13 +874,13 @@
         .use-case-title {
             font-size: 18px;
             font-weight: 700;
-            color: #1e40af;
+            color: #3263E9;
             margin-bottom: 10px;
         }
         
         .use-case-desc {
             font-size: 14px;
-            color: #64748b;
+            color: #6B7280;
             line-height: 1.5;
             margin-bottom: 15px;
         }
@@ -886,8 +888,9 @@
         .use-case-metric {
             font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #3263E9, #5B7FEA);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
@@ -898,7 +901,7 @@
             width: 40px;
             height: 40px;
             background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #3b82f6;
+            border: 2px solid #3263E9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -909,7 +912,7 @@
         }
         
         .close-overlay:hover {
-            background: #3b82f6;
+            background: #3263E9;
             color: white;
             transform: rotate(90deg);
         }
@@ -918,7 +921,7 @@
             content: '×';
             font-size: 24px;
             font-weight: 300;
-            color: #1e40af;
+            color: #3263E9;
         }
         
         .close-overlay:hover::before {
@@ -943,7 +946,7 @@
     
     <!-- Hero content -->
     <div class="hero-content" id="hero-content">
-        <h1 class="hero-logo">TRIBBLE</h1>
+        <img src="logo-static.svg" alt="Tribble" class="hero-logo-img" style="width: 200px; height: auto; margin-bottom: 20px;">
         <p class="hero-tagline">The Enterprise Intelligence Platform</p>
         <p class="hero-subtitle">Where Every Workflow Learns</p>
         <div>
@@ -1641,11 +1644,11 @@
         const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0x3b82f6, 0.8);
+        const directionalLight = new THREE.DirectionalLight(0x3263E9, 0.8);
         directionalLight.position.set(100, 200, 100);
         scene.add(directionalLight);
         
-        const rimLight = new THREE.DirectionalLight(0x60a5fa, 0.4);
+        const rimLight = new THREE.DirectionalLight(0x5B7FEA, 0.4);
         rimLight.position.set(-100, 100, -100);
         scene.add(rimLight);
         
@@ -1656,7 +1659,7 @@
         let mainFactory = null;
         
         // Enhanced wireframe conversion with adjustable opacity
-        function convertToWireframe(object, color = 0x1e40af, lineOpacity = 1.0) {
+        function convertToWireframe(object, color = 0x3263E9, lineOpacity = 1.0) {
             object.traverse((child) => {
                 if (child.isMesh) {
                     const wireframeGeometry = new THREE.WireframeGeometry(child.geometry);
@@ -1776,7 +1779,7 @@
                 mainFactory = gltf.scene;
                 mainFactory.scale.set(2, 2, 2);
                 // Start with lower opacity for better text readability
-                convertToWireframe(mainFactory, 0x1e40af, 0.3);
+                convertToWireframe(mainFactory, 0x3263E9, 0.3);
                 scene.add(mainFactory);
                 
                 // Add microchip grid in the center
@@ -1799,8 +1802,8 @@
                                 const chip = chipGltf.scene.clone();
                                 chip.scale.set(10, 10, 10);
                                 
-                                // Convert to wireframe with cyan color
-                                convertToWireframe(chip, 0x00ffff, 0.8);
+                                // Convert to wireframe with Tribble blue color
+                                convertToWireframe(chip, 0x3263E9, 0.8);
                                 
                                 // Position in 3D grid with more spacing
                                 const x = (col - cols / 2 + 0.5) * spacing;
@@ -1820,7 +1823,7 @@
                     
                     // Create neural network connections
                     const connectionMaterial = new THREE.LineBasicMaterial({
-                        color: 0x00ffff,
+                        color: 0x3263E9,
                         transparent: true,
                         opacity: 0.3,
                         linewidth: 1
@@ -1875,7 +1878,7 @@
                 // Central dome
                 const domeGeometry = new THREE.SphereGeometry(30, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
                 const domeMesh = new THREE.Mesh(domeGeometry);
-                convertToWireframe(domeMesh, 0x00bfff, 0.3);
+                convertToWireframe(domeMesh, 0x5B7FEA, 0.3);
                 domeMesh.position.y = 25;
                 factoryGroup.add(domeMesh);
                 
@@ -1883,7 +1886,7 @@
                 for (let i = 0; i < 4; i++) {
                     const towerGeometry = new THREE.CylinderGeometry(8, 10, 80, 8);
                     const towerMesh = new THREE.Mesh(towerGeometry);
-                    convertToWireframe(towerMesh, 0x3b82f6, 0.3);
+                    convertToWireframe(towerMesh, 0x3263E9, 0.3);
                     const angle = (i / 4) * Math.PI * 2;
                     towerMesh.position.x = Math.cos(angle) * 60;
                     towerMesh.position.z = Math.sin(angle) * 60;
@@ -1895,7 +1898,7 @@
                 for (let side = -1; side <= 1; side += 2) {
                     const wingGeometry = new THREE.BoxGeometry(50, 30, 80);
                     const wingMesh = new THREE.Mesh(wingGeometry);
-                    convertToWireframe(wingMesh, 0x1e40af, 0.3);
+                    convertToWireframe(wingMesh, 0x3263E9, 0.3);
                     wingMesh.position.x = side * 75;
                     wingMesh.position.y = 15;
                     factoryGroup.add(wingMesh);
@@ -1903,7 +1906,7 @@
                     // Connectors
                     const connectorGeometry = new THREE.BoxGeometry(25, 15, 20);
                     const connectorMesh = new THREE.Mesh(connectorGeometry);
-                    convertToWireframe(connectorMesh, 0x60a5fa, 0.3);
+                    convertToWireframe(connectorMesh, 0x5B7FEA, 0.3);
                     connectorMesh.position.x = side * 50;
                     connectorMesh.position.y = 7.5;
                     factoryGroup.add(connectorMesh);
@@ -1913,7 +1916,7 @@
                 for (let i = 0; i < 8; i++) {
                     const detailGeometry = new THREE.BoxGeometry(10, 25, 10);
                     const detailMesh = new THREE.Mesh(detailGeometry);
-                    convertToWireframe(detailMesh, 0x93c5fd, 0.3);
+                    convertToWireframe(detailMesh, 0x7B9FEE, 0.3);
                     const angle = (i / 8) * Math.PI * 2;
                     detailMesh.position.x = Math.cos(angle) * 40;
                     detailMesh.position.z = Math.sin(angle) * 40;
