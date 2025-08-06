@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tribble - The Enterprise Intelligence Platform | Transform Operations Into Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="title-icon.svg">
+    <!-- Preload critical resources -->
+    <link rel="preload" href="./models/optimized/mega_factory.glb" as="fetch" crossorigin>
+    <link rel="preload" href="./models/optimized/microchip_prototype.glb" as="fetch" crossorigin>
     <style>
         * { 
             margin: 0; 
@@ -1634,6 +1637,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         
         // Scene setup
         const scene = new THREE.Scene();
@@ -1667,6 +1671,12 @@
         
         // Model loader
         const gltfLoader = new GLTFLoader();
+        
+        // Set up Draco loader for compressed geometry
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/libs/draco/');
+        dracoLoader.setDecoderConfig({ type: 'js' });
+        gltfLoader.setDRACOLoader(dracoLoader);
         
         // Component storage
         let mainFactory = null;
@@ -1788,16 +1798,27 @@
         // Load main factory model
         async function loadModels() {
             try {
-                const gltf = await gltfLoader.loadAsync('./models/mega_factory.glb');
+                console.log('Loading industrial_machine.glb...');
+                const gltf = await gltfLoader.loadAsync('./models/optimized/mega_factory.glb');
+                console.log('Industrial machine loaded successfully', gltf);
                 mainFactory = gltf.scene;
-                mainFactory.scale.set(2, 2, 2);
+                
+                // Calculate bounding box to understand the model size
+                const box = new THREE.Box3().setFromObject(mainFactory);
+                const size = box.getSize(new THREE.Vector3());
+                console.log('Industrial machine size:', size);
+                console.log('Industrial machine center:', box.getCenter(new THREE.Vector3()));
+                
+                // Set scale for mega_factory
+                mainFactory.scale.set(2, 2, 2);  // Original scale for mega_factory
+                
                 // Start with lower opacity for better text readability
                 convertToWireframe(mainFactory, 0x3263E9, 0.3);
                 scene.add(mainFactory);
                 
                 // Add microchip grid in the center
                 try {
-                    const chipGltf = await gltfLoader.loadAsync('./models/microchip_prototype.glb');
+                    const chipGltf = await gltfLoader.loadAsync('./models/optimized/microchip_prototype.glb');
                     
                     // Create a 3D grid of chips
                     const chipGrid = new THREE.Group();
@@ -1872,10 +1893,12 @@
                     mainFactory.userData.chipGrid = chipGrid;
                     
                 } catch (e) {
-                    console.log('Microchip grid not added:', e);
+                    console.error('ERROR: Microchip grid failed to load:', e);
+                    console.error('Check if file exists at: ./models/optimized/microchip_prototype.glb');
                 }
                 
             } catch (error) {
+                console.error('ERROR: Main factory failed to load:', error);
                 console.log('Creating fallback factory');
                 
                 // Create complex fallback factory
