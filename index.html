@@ -2234,7 +2234,8 @@
                 if (currentScene === 0) {
                     adjustWireframeOpacity(0.3);
                     // Show hero content on scene 0
-                    document.getElementById('hero-content').classList.remove('hidden');
+                    document.getElementById('hero-top').classList.remove('hidden');
+                    document.getElementById('hero-buttons').classList.remove('hidden');
                     document.getElementById('scroll-prompt').classList.remove('hidden');
                 } else {
                     if (currentScene === 1) {
@@ -2243,7 +2244,8 @@
                         adjustWireframeOpacity(0.8);
                     }
                     // Hide hero content on other scenes
-                    document.getElementById('hero-content').classList.add('hidden');
+                    document.getElementById('hero-top').classList.add('hidden');
+                    document.getElementById('hero-buttons').classList.add('hidden');
                     document.getElementById('scroll-prompt').classList.add('hidden');
                 }
                 
