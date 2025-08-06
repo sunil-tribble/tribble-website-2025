@@ -372,6 +372,82 @@
             transition: opacity 0.5s ease;
         }
         
+        /* View Details Button - Centered and Prominent */
+        .view-details-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 20px 48px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            z-index: 150;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4),
+                        0 0 100px rgba(59, 130, 246, 0.2);
+            display: none;
+            backdrop-filter: blur(10px);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .view-details-btn.visible {
+            display: block;
+            opacity: 1;
+            animation: pulseButton 2s ease-in-out infinite,
+                       floatButton 3s ease-in-out infinite;
+        }
+        
+        .view-details-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 60px;
+            opacity: 0.3;
+            filter: blur(20px);
+            z-index: -1;
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+        }
+        
+        .view-details-btn:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 25px 80px rgba(59, 130, 246, 0.6),
+                        0 0 120px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(135deg, #5558E3, #9F5FF6);
+        }
+        
+        @keyframes pulseButton {
+            0%, 100% { 
+                box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4),
+                            0 0 100px rgba(59, 130, 246, 0.2);
+            }
+            50% { 
+                box-shadow: 0 20px 80px rgba(59, 130, 246, 0.6),
+                            0 0 150px rgba(59, 130, 246, 0.3);
+            }
+        }
+        
+        @keyframes floatButton {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+            50% { transform: translate(-50%, -50%) translateY(-10px); }
+        }
+        
         .scroll-prompt.hidden {
             opacity: 0;
         }
@@ -658,12 +734,12 @@
             z-index: 200;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease-in-out;
         }
         
         .content-overlay.active {
-            display: block;
-            opacity: 1;
+            display: block !important;
+            opacity: 1 !important;
             pointer-events: auto;
         }
         
@@ -1037,6 +1113,9 @@
     </div>
     
     <div id="canvas-container"></div>
+    
+    <!-- View Details Button - Centered -->
+    <button class="view-details-btn" id="view-details-btn" onclick="showCurrentOverlay()">Explore Details →</button>
     
     <!-- Content Overlay Sections -->
     <div class="content-overlay" id="content-overlay-0">
@@ -2170,12 +2249,12 @@
                     clearTimeout(sceneStableTimer);
                 }
                 
-                // Show view details button after user settles at this zoom level (not on scene 0)
+                // Auto-show overlay after user settles at this zoom level (not on scene 0)
                 if (currentScene > 0) {
                     sceneStableTimer = setTimeout(() => {
-                        // Only show button if we're still at the same scene
-                        if (currentScene === sceneIndex) {
-                            showViewDetailsButton();
+                        // Only show overlay if we're still at the same scene and it hasn't been shown
+                        if (currentScene === sceneIndex && !contentShown[sceneIndex]) {
+                            showContentOverlay(currentScene);
                         }
                     }, 1200); // Wait 1.2 seconds for user to settle
                 }
@@ -2323,8 +2402,6 @@
             for (let i = 0; i < scenes.length; i++) {
                 const overlay = document.getElementById(`content-overlay-${i}`);
                 if (overlay) {
-                    overlay.style.opacity = '0';
-                    overlay.style.display = 'none';
                     overlay.classList.remove('active');
                 }
             }
@@ -2344,19 +2421,10 @@
             setTimeout(() => {
                 const overlay = document.getElementById(`content-overlay-${sceneIndex}`);
                 if (overlay) {
-                    overlay.style.display = 'block';
-                    overlay.style.opacity = '0';
-                    
-                    // Force reflow
-                    overlay.offsetHeight;
-                    
-                    // Fade in
-                    setTimeout(() => {
-                        overlay.style.opacity = '1';
-                        overlay.classList.add('active');
-                        contentShown[sceneIndex] = true;
-                        currentOverlay = sceneIndex;
-                    }, 50);
+                    overlay.classList.add('active');
+                    contentShown[sceneIndex] = true;
+                    currentOverlay = sceneIndex;
+                    hideViewDetailsButton();
                 }
             }, 300);
         }
@@ -2364,12 +2432,12 @@
         window.closeContentOverlay = function(index) {
             const overlay = document.getElementById(`content-overlay-${index}`);
             if (overlay) {
-                overlay.style.opacity = '0';
+                overlay.classList.remove('active');
+                currentOverlay = -1;
+                // Don't reset contentShown so it doesn't auto-show again
+                // contentShown[index] = false;
+                // Show the view details button again after a delay
                 setTimeout(() => {
-                    overlay.style.display = 'none';
-                    overlay.classList.remove('active');
-                    currentOverlay = -1;
-                    // Show the view details button again
                     showViewDetailsButton();
                 }, 500);
             }
@@ -2385,6 +2453,8 @@
         function showViewDetailsButton() {
             const btn = document.getElementById('view-details-btn');
             if (btn && currentScene > 0) { // Don't show on first scene
+                // Update button text to be more descriptive
+                btn.innerHTML = `Explore ${scenes[currentScene].name} →`;
                 setTimeout(() => {
                     btn.classList.add('visible');
                 }, 500);
