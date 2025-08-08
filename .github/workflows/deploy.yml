@@ -1,0 +1,35 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy to DigitalOcean Droplet
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 167.71.94.51
+        username: root
+        key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
+        script: |
+          # Navigate to website directory
+          cd /var/www/html || cd /var/www/tribble || exit 1
+          
+          # Pull latest changes from GitHub
+          git pull origin main
+          
+          # Ensure proper permissions
+          chown -R www-data:www-data .
+          
+          # Restart nginx to clear any cache
+          systemctl reload nginx
+          
+          echo "Deployment completed successfully!"
