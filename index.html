@@ -20,7 +20,7 @@
             background: #f8fafc;
             color: #00091A;
             overflow-x: hidden;
-            height: 1600vh;
+            height: 800vh;
         }
         
         #canvas-container {
@@ -944,6 +944,186 @@
         }
     </style>
     
+    <!-- Technical HUD aesthetic overrides: angular, blue/white, no emojis -->
+    <style>
+        :root {
+            --tribble-blue: #3263E9;
+            --tribble-blue-2: #5B7FEA;
+            --panel-bg: rgba(255, 255, 255, 0.94);
+            --notch: 12px;
+            --thin: 1.5px;
+        }
+
+        /* Angular panel primitive */
+        .panel-angled {
+            background: var(--panel-bg);
+            border: 2px solid var(--tribble-blue);
+            border-radius: 0;
+            clip-path: polygon(var(--notch) 0, 100% 0, 100% calc(100% - var(--notch)), calc(100% - var(--notch)) 100%, 0 100%, 0 var(--notch));
+            position: relative;
+            backdrop-filter: blur(12px);
+        }
+        .panel-angled::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--tribble-blue), rgba(91,127,234,0.4), transparent 70%);
+        }
+        .panel-angled::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 22%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(50,99,233,0.6));
+        }
+
+        /* Apply angular panels to existing UI blocks */
+        .feature-item,
+        .use-case-card,
+        .content-left,
+        .analysis-panel,
+        .data-readout,
+        .velocity-display { 
+            border-radius: 0 !important; 
+        }
+        .feature-item,
+        .use-case-card,
+        .content-left,
+        .analysis-panel { 
+            /* upgrade to angular panel */
+            background: var(--panel-bg) !important;
+            border: 2px solid var(--tribble-blue) !important;
+            clip-path: polygon(var(--notch) 0, 100% 0, 100% calc(100% - var(--notch)), calc(100% - var(--notch)) 100%, 0 100%, 0 var(--notch));
+            position: relative;
+        }
+        .feature-item::before,
+        .use-case-card::before,
+        .content-left::before,
+        .analysis-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--tribble-blue), rgba(91,127,234,0.35), transparent 70%);
+        }
+
+        /* Badge: remove pill, add bracketed label */
+        .content-badge {
+            background: transparent !important;
+            color: var(--tribble-blue) !important;
+            border: 1.5px solid var(--tribble-blue) !important;
+            border-radius: 0 !important;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+            letter-spacing: 1.2px;
+        }
+        .content-badge::before,
+        .content-badge::after {
+            content: '';
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-top: var(--thin) solid var(--tribble-blue);
+            border-left: var(--thin) solid var(--tribble-blue);
+            margin: 0 10px -2px 0;
+            transform: rotate(45deg);
+        }
+        .content-badge::after {
+            border-left: 0; border-top: 0;
+            border-right: var(--thin) solid var(--tribble-blue);
+            border-bottom: var(--thin) solid var(--tribble-blue);
+            margin: 0 0 -2px 10px;
+        }
+
+        /* Buttons: remove rounded, add angled silhouette */
+        .hero-cta,
+        .hero-cta.secondary,
+        .content-cta,
+        .view-details-btn {
+            border-radius: 0 !important;
+            clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+            letter-spacing: 0.08em;
+        }
+        .hero-cta,
+        .content-cta {
+            background: linear-gradient(135deg, var(--tribble-blue), var(--tribble-blue-2)) !important;
+            border: 2px solid rgba(255,255,255,0.0) !important;
+            box-shadow: none !important;
+        }
+        .hero-cta.secondary {
+            background: transparent !important;
+            border: 2px solid var(--tribble-blue) !important;
+            color: var(--tribble-blue) !important;
+        }
+        .view-details-btn {
+            box-shadow: none !important;
+            animation: none !important;
+            border: 2px solid var(--tribble-blue) !important;
+            background: rgba(255,255,255,0.92) !important;
+            color: var(--tribble-blue) !important;
+        }
+
+        /* Close control: square, cut-corner, technical */
+        .close-overlay {
+            border-radius: 0 !important;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+        .close-overlay::before { color: var(--tribble-blue) !important; }
+        .close-overlay:hover { transform: none !important; }
+
+        /* Replace emoji icons with angular glyphs via CSS */
+        .feature-icon,
+        .use-case-icon {
+            width: 32px; height: 32px;
+            margin: 0 auto 10px auto;
+            position: relative;
+            font-size: 0 !important;
+        }
+        .feature-icon::before, .feature-icon::after,
+        .use-case-icon::before, .use-case-icon::after { content: none !important; }
+        .feature-icon svg, .use-case-icon svg { width: 32px; height: 32px; color: var(--tribble-blue); display: block; }
+
+        /* Titles: more tech-forward spacing */
+        .content-title { letter-spacing: 0.5px; }
+        .use-case-title, .feature-title { letter-spacing: 0.6px; }
+
+        /* Remove heavy rounded corners and glows globally in overlays */
+        .content-left,
+        .use-case-card,
+        .feature-item { box-shadow: none !important; }
+
+        /* Dense, technical stat blocks */
+        .stat-item {
+            border-radius: 0 !important;
+            border-left: 0 !important;
+            border: 1px solid rgba(50,99,233,0.35) !important;
+            background: rgba(50,99,233,0.04) !important;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        /* Scroll arrow sharper */
+        .scroll-arrow { border-radius: 0 !important; }
+
+        /* HUD rulers */
+        .hud-ruler { position: absolute; pointer-events: none; opacity: 0.25; z-index: 5; }
+        .hud-ruler-top { top: 0; left: 0; right: 0; height: 12px; background: repeating-linear-gradient(90deg, rgba(50,99,233,0.6) 0, rgba(50,99,233,0.6) 2px, transparent 2px, transparent 10px); }
+        .hud-ruler-left { top: 0; left: 0; bottom: 0; width: 12px; background: repeating-linear-gradient(180deg, rgba(50,99,233,0.6) 0, rgba(50,99,233,0.6) 2px, transparent 2px, transparent 10px); }
+
+        /* Focus visibility for accessibility */
+        a:focus-visible, button:focus-visible { outline: 2px solid var(--tribble-blue); outline-offset: 2px; }
+
+        /* Progress bars: sharper corners */
+        .progress-bar { border-radius: 0 !important; }
+
+        /* Data readouts look like HUD tiles */
+        .data-readout { background: rgba(255,255,255,0.92) !important; }
+    </style>
+    
     <script type="importmap">
     {
         "imports": {
@@ -955,6 +1135,54 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
 <body>
+    <!-- Inline SVG sprite for HUD glyphs -->
+    <svg aria-hidden="true" focusable="false" style="position:absolute; width:0; height:0; overflow:hidden">
+        <defs>
+            <symbol id="icon-hex" viewBox="0 0 100 100">
+                <polygon points="25,5 75,5 95,50 75,95 25,95 5,50" fill="none" stroke="currentColor" stroke-width="6"/>
+            </symbol>
+            <symbol id="icon-node" viewBox="0 0 100 100">
+                <circle cx="20" cy="50" r="10" fill="currentColor"/>
+                <circle cx="80" cy="30" r="10" fill="currentColor"/>
+                <circle cx="70" cy="80" r="10" fill="currentColor"/>
+                <path d="M28 47 L70 33 M28 53 L62 76" stroke="currentColor" stroke-width="6" fill="none"/>
+            </symbol>
+            <symbol id="icon-target" viewBox="0 0 100 100">
+                <polygon points="35,5 65,5 95,35 95,65 65,95 35,95 5,65 5,35" fill="none" stroke="currentColor" stroke-width="6"/>
+                <line x1="50" y1="15" x2="50" y2="85" stroke="currentColor" stroke-width="6"/>
+                <line x1="15" y1="50" x2="85" y2="50" stroke="currentColor" stroke-width="6"/>
+            </symbol>
+            <symbol id="icon-bolt" viewBox="0 0 100 100">
+                <polygon points="45,5 20,55 45,55 35,95 80,35 55,35 70,5" fill="currentColor"/>
+            </symbol>
+            <symbol id="icon-shield" viewBox="0 0 100 100">
+                <path d="M50 8 L85 20 V50 C85 70 70 85 50 92 C30 85 15 70 15 50 V20 Z" fill="none" stroke="currentColor" stroke-width="6"/>
+            </symbol>
+            <symbol id="icon-gear" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="6"/>
+                <g fill="none" stroke="currentColor" stroke-width="6">
+                    <path d="M50 5 V20"/>
+                    <path d="M50 80 V95"/>
+                    <path d="M5 50 H20"/>
+                    <path d="M80 50 H95"/>
+                    <path d="M18 18 L28 28"/>
+                    <path d="M72 72 L82 82"/>
+                    <path d="M82 18 L72 28"/>
+                    <path d="M28 72 L18 82"/>
+                </g>
+            </symbol>
+            <symbol id="icon-chart" viewBox="0 0 100 100">
+                <rect x="15" y="60" width="12" height="25" fill="currentColor"/>
+                <rect x="40" y="45" width="12" height="40" fill="currentColor"/>
+                <rect x="65" y="25" width="12" height="60" fill="currentColor"/>
+            </symbol>
+            <symbol id="icon-doc" viewBox="0 0 100 100">
+                <path d="M20 10 H60 L80 30 V90 H20 Z" fill="none" stroke="currentColor" stroke-width="6"/>
+                <path d="M60 10 V30 H80" fill="none" stroke="currentColor" stroke-width="6"/>
+                <path d="M30 45 H70 M30 60 H70 M30 75 H55" stroke="currentColor" stroke-width="6"/>
+            </symbol>
+        </defs>
+    </svg>
     <div class="loading-screen" id="loading-screen">
         <div class="loading-text">INITIALIZING AGENT FACTORY</div>
     </div>
@@ -974,17 +1202,17 @@
     <!-- Features strip -->
     <div class="features-strip" id="features-strip">
         <div class="feature-item">
-            <div class="feature-icon">🧠</div>
+            <div class="feature-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-node"></use></svg></div>
             <div class="feature-title">Capture Intelligence</div>
             <div class="feature-desc">Learn from every interaction</div>
         </div>
         <div class="feature-item">
-            <div class="feature-icon">⚡</div>
+            <div class="feature-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-bolt"></use></svg></div>
             <div class="feature-title">Amplify Intelligence</div>
             <div class="feature-desc">Scale expertise instantly</div>
         </div>
         <div class="feature-item">
-            <div class="feature-icon">🚀</div>
+            <div class="feature-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-gear"></use></svg></div>
             <div class="feature-title">Automate Intelligence</div>
             <div class="feature-desc">Self-executing workflows</div>
         </div>
@@ -998,6 +1226,9 @@
     
     <div class="hud-overlay">
         <div class="tech-grid"></div>
+        <!-- HUD rulers / tick marks -->
+        <div class="hud-ruler hud-ruler-top"></div>
+        <div class="hud-ruler hud-ruler-left"></div>
         
         <!-- HUD Corners -->
         <div class="hud-corner top-left"></div>
@@ -1167,25 +1398,25 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">💼</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">Sales Intelligence</h3>
                         <p class="use-case-desc">Generate expert RFP responses, automate proposals, and scale your top performers' strategies.</p>
                         <div class="use-case-metric">800 hrs/month saved</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🛡️</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-shield"></use></svg></div>
                         <h3 class="use-case-title">Security & Compliance</h3>
                         <p class="use-case-desc">Automate security questionnaires and compliance documentation with 100% accuracy.</p>
                         <div class="use-case-metric">85% faster responses</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Enablement & Training</h3>
                         <p class="use-case-desc">Deliver personalized coaching based on real performance gaps identified by AI.</p>
                         <div class="use-case-metric">5,600 questions/month</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">📊</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-chart"></use></svg></div>
                         <h3 class="use-case-title">Product Intelligence</h3>
                         <p class="use-case-desc">Auto-generate documentation and identify knowledge gaps across your product.</p>
                         <div class="use-case-metric">50% efficiency gain</div>
@@ -1218,22 +1449,22 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">🔗</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-node"></use></svg></div>
                         <h3 class="use-case-title">Salesforce + Slack</h3>
                         <p class="use-case-desc">Automatically sync deal context and update CRM from Slack conversations.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">📄</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">Document Intelligence</h3>
                         <p class="use-case-desc">Extract insights from Google Drive, SharePoint, and Confluence automatically.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Zendesk Integration</h3>
                         <p class="use-case-desc">Route support tickets to experts based on historical resolution patterns.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🧠</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-node"></use></svg></div>
                         <h3 class="use-case-title">Box Integration</h3>
                         <p class="use-case-desc">Unlock unstructured data to create comprehensive agent interactions.</p>
                     </div>
@@ -1265,22 +1496,22 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">🤖</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-gear"></use></svg></div>
                         <h3 class="use-case-title">RFP Response Agent</h3>
                         <p class="use-case-desc">Analyzes requirements, pulls from knowledge base, and generates expert responses.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🔍</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Research Agent</h3>
                         <p class="use-case-desc">Gathers competitive intelligence and market insights for strategic decisions.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Coaching Agent</h3>
                         <p class="use-case-desc">Analyzes call recordings, identifies gaps, and delivers personalized training.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">📊</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-chart"></use></svg></div>
                         <h3 class="use-case-title">Analytics Agent</h3>
                         <p class="use-case-desc">Monitors performance metrics and suggests optimization opportunities.</p>
                     </div>
@@ -1312,22 +1543,22 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Smart Call Analysis</h3>
                         <p class="use-case-desc">Listen to calls, identify struggling reps, and automatically schedule personalized training simulations.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">📧</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">Email Intelligence</h3>
                         <p class="use-case-desc">Detect urgent RFPs, auto-draft responses, and alert the right team members instantly.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">📈</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-chart"></use></svg></div>
                         <h3 class="use-case-title">Deal Acceleration</h3>
                         <p class="use-case-desc">Monitor deal velocity, identify stalled opportunities, and trigger intervention workflows.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🔄</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-gear"></use></svg></div>
                         <h3 class="use-case-title">Continuous Improvement</h3>
                         <p class="use-case-desc">Learn from successful outcomes and automatically update all agent behaviors.</p>
                     </div>
@@ -1359,22 +1590,22 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">📚</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">Success Pattern Recognition</h3>
                         <p class="use-case-desc">Identify what makes deals close faster and replicate winning strategies automatically.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎓</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">Knowledge Gap Detection</h3>
                         <p class="use-case-desc">Proactively identify missing documentation and generate it before teams need it.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🔮</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-hex"></use></svg></div>
                         <h3 class="use-case-title">Predictive Intelligence</h3>
                         <p class="use-case-desc">Anticipate customer questions and prepare responses before they're asked.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">⚡</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-bolt"></use></svg></div>
                         <h3 class="use-case-title">Performance Optimization</h3>
                         <p class="use-case-desc">Continuously refine workflows based on actual outcomes and team feedback.</p>
                     </div>
@@ -1406,25 +1637,25 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">📝</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-doc"></use></svg></div>
                         <h3 class="use-case-title">RFP Automation</h3>
                         <p class="use-case-desc">Complete complex RFPs in minutes, not days. Pull from past wins, product docs, and expert knowledge automatically.</p>
                         <div class="use-case-metric">2 hours → 10 minutes</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Discovery Intelligence</h3>
                         <p class="use-case-desc">Analyze calls to identify reps struggling with discovery. Auto-schedule personalized training with real deal simulations.</p>
                         <div class="use-case-metric">35% better qualification</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🚀</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-bolt"></use></svg></div>
                         <h3 class="use-case-title">Deal Acceleration</h3>
                         <p class="use-case-desc">Monitor all deals in real-time. Identify blockers, suggest next best actions, and pull in resources automatically.</p>
                         <div class="use-case-metric">23% faster deal velocity</div>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🏆</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-hex"></use></svg></div>
                         <h3 class="use-case-title">Competitive Intelligence</h3>
                         <p class="use-case-desc">Instantly access battlecards, win/loss analysis, and competitive positioning for any deal scenario.</p>
                         <div class="use-case-metric">42% higher win rate</div>
@@ -1457,177 +1688,24 @@
             <div class="content-right">
                 <div class="use-case-grid">
                     <div class="use-case-card">
-                        <div class="use-case-icon">📊</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-chart"></use></svg></div>
                         <h3 class="use-case-title">Agent Performance</h3>
                         <p class="use-case-desc">Track response accuracy, completion times, and satisfaction scores for every agent interaction.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">💰</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-chart"></use></svg></div>
                         <h3 class="use-case-title">ROI Dashboard</h3>
                         <p class="use-case-desc">Measure time saved, deals accelerated, and revenue impact in real-time.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">🔍</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-target"></use></svg></div>
                         <h3 class="use-case-title">Knowledge Utilization</h3>
                         <p class="use-case-desc">See which knowledge sources drive the best outcomes and identify gaps.</p>
                     </div>
                     <div class="use-case-card">
-                        <div class="use-case-icon">⚙️</div>
+                        <div class="use-case-icon"><svg aria-hidden="true" viewBox="0 0 100 100"><use href="#icon-gear"></use></svg></div>
                         <h3 class="use-case-title">Workflow Optimization</h3>
                         <p class="use-case-desc">Identify bottlenecks and optimization opportunities across all automated workflows.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Scene 7: Custom Intelligence -->
-    <div class="content-overlay" id="content-overlay-7">
-        <div class="close-overlay" onclick="closeContentOverlay(7)"></div>
-        <div class="content-container">
-            <div class="content-left">
-                <span class="content-badge">Marketing Intelligence</span>
-                <h2 class="content-title">Marketing That Learns & Scales</h2>
-                <p class="content-subtitle">Transform marketing operations with AI agents that create content, analyze campaigns, and personalize at scale—all while learning from what works.</p>
-                <div class="content-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">10x</div>
-                        <div class="stat-label">Content Velocity</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">67%</div>
-                        <div class="stat-label">Higher Engagement</div>
-                    </div>
-                </div>
-                <button class="content-cta">Scale Your Marketing</button>
-            </div>
-            <div class="content-right">
-                <div class="use-case-grid">
-                    <div class="use-case-card">
-                        <div class="use-case-icon">✍️</div>
-                        <h3 class="use-case-title">Content Generation</h3>
-                        <p class="use-case-desc">Create blog posts, social content, and email campaigns that match your brand voice perfectly.</p>
-                        <div class="use-case-metric">5 days → 30 minutes</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🎨</div>
-                        <h3 class="use-case-title">Campaign Intelligence</h3>
-                        <p class="use-case-desc">Analyze campaign performance across channels and automatically optimize for better results.</p>
-                        <div class="use-case-metric">3x better ROI</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">👥</div>
-                        <h3 class="use-case-title">Persona Development</h3>
-                        <p class="use-case-desc">Build and refine buyer personas based on actual engagement data and sales feedback.</p>
-                        <div class="use-case-metric">85% accuracy</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">📱</div>
-                        <h3 class="use-case-title">Social Listening</h3>
-                        <p class="use-case-desc">Monitor brand mentions, competitor moves, and market trends to inform strategy.</p>
-                        <div class="use-case-metric">Real-time insights</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Scene 8: Always-On Intelligence -->
-    <div class="content-overlay" id="content-overlay-8">
-        <div class="close-overlay" onclick="closeContentOverlay(8)"></div>
-        <div class="content-container">
-            <div class="content-left">
-                <span class="content-badge">Customer Success</span>
-                <h2 class="content-title">Proactive Success at Scale</h2>
-                <p class="content-subtitle">Transform customer success from reactive support to proactive value delivery. Tribble identifies risks, automates interventions, and scales your best CSM practices.</p>
-                <div class="content-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">45%</div>
-                        <div class="stat-label">Reduced Churn</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">88%</div>
-                        <div class="stat-label">Auto-Resolution</div>
-                    </div>
-                </div>
-                <button class="content-cta">Transform Customer Success</button>
-            </div>
-            <div class="content-right">
-                <div class="use-case-grid">
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🔔</div>
-                        <h3 class="use-case-title">Health Score Monitoring</h3>
-                        <p class="use-case-desc">Continuously analyze usage patterns, support tickets, and engagement to predict churn risk.</p>
-                        <div class="use-case-metric">60 days early warning</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🎯</div>
-                        <h3 class="use-case-title">Proactive Outreach</h3>
-                        <p class="use-case-desc">Automatically trigger personalized interventions when customers show signs of struggle.</p>
-                        <div class="use-case-metric">72% save rate</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">📚</div>
-                        <h3 class="use-case-title">Knowledge Base AI</h3>
-                        <p class="use-case-desc">Auto-generate help articles based on support tickets and update docs as products evolve.</p>
-                        <div class="use-case-metric">95% coverage</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">⚡</div>
-                        <h3 class="use-case-title">Instant Resolution</h3>
-                        <p class="use-case-desc">Resolve common issues instantly with AI that learns from your best support agents.</p>
-                        <div class="use-case-metric">< 1 min response</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Scene 9: Command Center -->
-    <div class="content-overlay" id="content-overlay-9">
-        <div class="close-overlay" onclick="closeContentOverlay(9)"></div>
-        <div class="content-container">
-            <div class="content-left">
-                <span class="content-badge">Operations Excellence</span>
-                <h2 class="content-title">Operations That Run Themselves</h2>
-                <p class="content-subtitle">Build an operations layer that identifies inefficiencies, automates processes, and continuously optimizes—turning your ops team into strategic accelerators.</p>
-                <div class="content-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">75%</div>
-                        <div class="stat-label">Process Automation</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">$2.3M</div>
-                        <div class="stat-label">Annual Savings</div>
-                    </div>
-                </div>
-                <button class="content-cta">Automate Operations</button>
-            </div>
-            <div class="content-right">
-                <div class="use-case-grid">
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🔄</div>
-                        <h3 class="use-case-title">Process Mining</h3>
-                        <p class="use-case-desc">Automatically discover inefficiencies in workflows and suggest optimization opportunities.</p>
-                        <div class="use-case-metric">40% efficiency gain</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">📊</div>
-                        <h3 class="use-case-title">Resource Planning</h3>
-                        <p class="use-case-desc">Predict resource needs, optimize allocation, and prevent bottlenecks before they occur.</p>
-                        <div class="use-case-metric">30% cost reduction</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🛡️</div>
-                        <h3 class="use-case-title">Compliance Automation</h3>
-                        <p class="use-case-desc">Ensure every process meets compliance requirements with continuous monitoring and documentation.</p>
-                        <div class="use-case-metric">100% audit ready</div>
-                    </div>
-                    <div class="use-case-card">
-                        <div class="use-case-icon">🚀</div>
-                        <h3 class="use-case-title">Vendor Management</h3>
-                        <p class="use-case-desc">Automate vendor onboarding, performance tracking, and contract management end-to-end.</p>
-                        <div class="use-case-metric">5x faster onboarding</div>
                     </div>
                 </div>
             </div>
@@ -1709,85 +1787,61 @@
         
         // Scene configurations - journey from far to inside
         const scenes = [
-            { 
-                name: 'ENTERPRISE INTELLIGENCE PLATFORM',
-                subtitle: 'Your Organization, Thinking As One - 2000m',
-                camera: { x: 0, y: 1000, z: 2000 },
+            {
+                name: 'TRIBBLE: YOUR ORCHESTRATED AGENT',
+                subtitle: 'One agent that learns your business and runs it',
+                camera: { x: 0, y: 900, z: 1900 },
                 target: { x: 0, y: 0, z: 0 },
                 rotation: { x: 0, y: 0, z: 0 },
                 hudElements: ['velocity-display', 'tracking-brackets']
             },
-            { 
-                name: 'COLLECTIVE MEMORY',
-                subtitle: 'Knowledge Graph Connecting Every System - 1000m',
-                camera: { x: 500, y: 600, z: 1000 },
+            {
+                name: 'CAPTURE + CONNECT',
+                subtitle: 'Unified memory graph across systems, docs, and conversations',
+                camera: { x: 450, y: 520, z: 900 },
                 target: { x: 0, y: 0, z: 0 },
-                rotation: { x: 0, y: 0.2, z: 0 },
+                rotation: { x: 0, y: 0.18, z: 0 },
                 hudElements: ['velocity-display', 'readout1', 'connection-lines', 'radar']
             },
-            { 
-                name: 'DISTRIBUTED THINKING',
-                subtitle: 'Multi-Agent Orchestration at Scale - 500m',
-                camera: { x: -300, y: 400, z: 500 },
-                target: { x: 0, y: 0, z: 0 },
-                rotation: { x: 0, y: -0.3, z: 0 },
-                hudElements: ['readout1', 'readout2', 'compass', 'reticle', 'particle-field']
+            {
+                name: 'THINK + ORCHESTRATE',
+                subtitle: 'Specialized agents collaborating to complete workflows',
+                camera: { x: -280, y: 360, z: 460 },
+                target: { x: 0, y: 20, z: 0 },
+                rotation: { x: 0, y: -0.28, z: 0 },
+                hudElements: ['readout1', 'readout2', 'reticle', 'particle-field']
             },
-            { 
-                name: 'AUTONOMOUS ACTION',
-                subtitle: 'Event-Driven Workflow Intelligence - 250m',
-                camera: { x: 200, y: 250, z: 300 },
+            {
+                name: 'ACT WITHOUT ASKING',
+                subtitle: 'Event-driven intelligence that triggers and resolves work',
+                camera: { x: 220, y: 240, z: 280 },
                 target: { x: 0, y: 30, z: 0 },
-                rotation: { x: 0, y: 0.5, z: 0 },
-                hudElements: ['analysis-panel', 'reticle', 'point1', 'point2', 'point3', 'crosshair']
+                rotation: { x: 0, y: 0.48, z: 0 },
+                hudElements: ['analysis-panel', 'reticle', 'crosshair']
             },
-            { 
-                name: 'CONTINUOUS LEARNING',
-                subtitle: 'Feedback Loops That Improve Every Day - Orbital View',
-                camera: { x: 250, y: 200, z: 250 },
+            {
+                name: 'REAL IMPACT BY FUNCTION',
+                subtitle: 'Sales, CS, Ops, Product, and Marketing in action',
+                camera: { x: -260, y: 180, z: 0 },
+                target: { x: 0, y: 40, z: 0 },
+                rotation: { x: 0, y: 1.7, z: 0 },
+                hudElements: ['readout3', 'connection-lines', 'waveform']
+            },
+            {
+                name: 'TRIBBLYTICS',
+                subtitle: 'Audit trails, performance telemetry, and ROI in real time',
+                camera: { x: 180, y: 240, z: -180 },
+                target: { x: 0, y: 45, z: 0 },
+                rotation: { x: 0.08, y: 2.3, z: 0 },
+                hudElements: ['readout1', 'readout2', 'reticle', 'point3']
+            },
+            {
+                name: 'ACTIVATE TRIBBLE',
+                subtitle: 'See it run a workflow for your team this week',
+                camera: { x: 280, y: 280, z: 280 },
                 target: { x: 0, y: 50, z: 0 },
-                rotation: { x: 0, y: 1.2, z: 0 },
-                hudElements: ['analysis-panel', 'reticle', 'readout2', 'tracking-brackets']
-            },
-            { 
-                name: 'SALES TRANSFORMATION',
-                subtitle: 'From Reactive to Predictive Selling - Side View',
-                camera: { x: -300, y: 150, z: 0 },
-                target: { x: 0, y: 50, z: 0 },
-                rotation: { x: 0, y: 1.8, z: 0 },
-                hudElements: ['readout3', 'point1', 'point2', 'connection-lines', 'waveform']
-            },
-            { 
-                name: 'INTELLIGENCE METRICS',
-                subtitle: 'Measure What Matters - Perspective View',
-                camera: { x: 200, y: 250, z: -200 },
-                target: { x: 0, y: 50, z: 0 },
-                rotation: { x: 0.1, y: 2.4, z: 0 },
-                hudElements: ['readout1', 'readout2', 'reticle', 'point3', 'point4']
-            },
-            { 
-                name: 'CUSTOM INTELLIGENCE',
-                subtitle: 'Your Workflows, Your Rules - Diagonal View',
-                camera: { x: -250, y: 200, z: 250 },
-                target: { x: 0, y: 50, z: 0 },
-                rotation: { x: 0, y: 3.0, z: 0 },
-                hudElements: ['analysis-panel', 'readout3', 'velocity-display']
-            },
-            { 
-                name: 'ALWAYS-ON INTELLIGENCE',
-                subtitle: 'Your 24/7 Digital Workforce - Top View',
-                camera: { x: 0, y: 350, z: 150 },
-                target: { x: 0, y: 0, z: 0 },
-                rotation: { x: 0, y: 3.8, z: 0 },
-                hudElements: ['readout1', 'readout2', 'reticle', 'tracking-brackets']
-            },
-            { 
-                name: 'INTELLIGENCE COMMAND CENTER',
-                subtitle: 'Where Every Workflow Learns - Complete View',
-                camera: { x: 300, y: 300, z: 300 },
-                target: { x: 0, y: 50, z: 0 },
-                rotation: { x: 0, y: 4.5, z: 0 },
-                hudElements: ['analysis-panel', 'readout1', 'readout2', 'readout3', 'connection-lines']
+                rotation: { x: 0, y: 4.3, z: 0 },
+                hudElements: ['analysis-panel', 'readout1', 'readout2', 'readout3']
             }
         ];
         
